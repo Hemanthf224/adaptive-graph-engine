@@ -36,6 +36,12 @@ Tested on the **Amazon Product Co-purchasing Network** (262,111 Vertices, 1,234,
 
 *(Note: Because the Amazon graph fits entirely inside the CPU's L3 Cache (~5MB), the Sequential CPU is incredibly fast as it avoids Main Memory latency. The GPU's massive GDDR6 bandwidth dominance will activate on out-of-core graphs >100M edges).*
 
+## Resume Bullet Points
+If you are adding this project to your resume, here are recommended bullet points focusing on engineering impact:
+- Developed an adaptive graph processing engine using C++, CUDA, OpenMP, and CSR data structures, dynamically selecting CPU or GPU execution based on graph characteristics and memory constraints.
+- Implemented parallel BFS and PageRank across sequential CPU, OpenMP, and CUDA backends using atomic synchronization and CUDA Unified Memory.
+- Built a React + FastAPI benchmarking dashboard and pybind11 interface for interactive execution, performance analysis, and Python integration.
+
 ## Building from Source
 
 ### Prerequisites
