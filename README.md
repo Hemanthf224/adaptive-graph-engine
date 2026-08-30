@@ -26,7 +26,7 @@ This engine implements an **Adaptive Heuristic Scheduler** that dynamically disp
 Tested on the **Amazon Product Co-purchasing Network** (262,111 Vertices, 1,234,877 Edges). Hardware: Intel CPU / NVIDIA RTX 5060 Laptop GPU.
 
 ### PageRank (20 Iterations, Compute-Bound)
-*CUDA Unified Memory (Zero-Copy) drastically mitigates the 130ms PCI-E transfer latency, allowing the GPU to crunch 20 iterations of floating-point math in just 25ms!*
+*In our benchmark, CUDA Unified Memory substantially reduced the observed host-to-device data-transfer overhead, avoiding an explicit 130 ms PCIe copy. This allowed the GPU to crunch 20 iterations of floating-point math in just 25ms.*
 
 | Hardware | Time (ms) | Speedup vs OpenMP |
 |---|---|---|
