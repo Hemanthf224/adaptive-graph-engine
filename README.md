@@ -1,5 +1,6 @@
 # Adaptive Graph Engine
 
+[![C++ Graph Engine CI](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml)
 ![C++](https://img.shields.io/badge/C++-17-blue.svg)
 ![CUDA](https://img.shields.io/badge/CUDA-12.0-76B900.svg)
 ![OpenMP](https://img.shields.io/badge/OpenMP-Supported-orange.svg)
@@ -8,9 +9,18 @@
 
 A High-Performance, Distributed, and Hardware-Accelerated Graph Processing Engine developed in C++. 
 
-This system is engineered for the execution of massive-scale graph algorithms (e.g., PageRank, Breadth-First Search) across heterogeneous compute environments. It dynamically routes workloads to CPU Thread Pools (OpenMP), Graphics Processing Units (CUDA), or Distributed Supercomputing Clusters (MPI) based on runtime topological analysis of the dataset.
+This system is engineered for the execution of massive-scale graph algorithms (e.g., PageRank, Breadth-First Search, Connected Components, Dijkstra's SSSP) across heterogeneous compute environments. It dynamically routes workloads to CPU Thread Pools (OpenMP), Graphics Processing Units (CUDA), or Distributed Supercomputing Clusters (MPI) based on runtime topological analysis of the dataset.
 
 ---
+
+## Table of Contents
+- [Architecture and Core Capabilities](#architecture-and-core-capabilities)
+- [Technical Architecture Flow](#technical-architecture-flow)
+- [Quickstart (Docker)](#quickstart-docker)
+- [Manual Build & Installation](#manual-build--installation)
+- [Telemetry Dashboard UI](#telemetry-dashboard-ui)
+- [Contributors](#contributors)
+- [License](#license)
 
 ## Architecture and Core Capabilities
 
@@ -37,9 +47,6 @@ The engine features a heuristic-based `AdaptiveScheduler` that analyzes graph to
 - Eliminates standard ASCII parsing bottlenecks by compiling raw Compressed Sparse Row (CSR) memory layouts directly to SSD storage caches (`.bin`).
 - Achieves sub-200ms loading latencies for 68-million edge datasets by reading contiguous byte blocks directly into RAM via `std::fread`.
 
-### 6. Observability and Telemetry Dashboard
-- A highly technical React and FastAPI-based dashboard designed to visualize real-time benchmarking telemetry, Strong Scaling analysis curves, and hardware execution traces.
-
 ---
 
 ## Technical Architecture Flow
@@ -51,19 +58,35 @@ graph TD
     C -->|High Contention| D[CUDA UVM Engine]
     C -->|Low Contention| E[OpenMP CPU Engine]
     C -->|Cluster Detected| F[MPI Distributed Engine]
-    D --> G[PageRank / BFS]
+    D --> G[PageRank / BFS / CC / SSSP]
     E --> G
     F --> G
 ```
 
 ---
 
-## Build and Execution Guidelines
+## Quickstart (Docker)
+
+The entire Full-Stack platform (React Dashboard, Python FastAPI Backend, and C++ HPC Engine) is fully containerized. You do not need to install C++ or Node.js locally.
+
+```bash
+# Clone the repository
+git clone https://github.com/Hemanthf224/adaptive-graph-engine.git
+cd adaptive-graph-engine
+
+# Build and launch the cluster orchestration
+docker-compose up --build
+```
+Once the containers spin up, navigate to `http://localhost:5173` to view the Live Telemetry Dashboard.
+
+---
+
+## Manual Build & Installation
 
 ### Prerequisites
 - **OS:** Linux (Ubuntu/CentOS) or Windows WSL2
 - **Compiler:** GCC 9.0+ (C++17 Support Required)
-- **GPU:** NVIDIA GPU with CUDA Toolkit 11.0+
+- **GPU:** NVIDIA GPU with CUDA Toolkit 11.0+ (Optional)
 - **Distributed Environment:** OpenMPI installed (`sudo apt install openmpi-bin libopenmpi-dev`)
 - **Build System:** CMake 3.24+
 
@@ -100,13 +123,13 @@ mpirun -np 4 ./src/graph_engine ../data/amazon0302.txt
 
 ## Telemetry Dashboard UI
 
-To initialize the hardware observability dashboard:
+If you are not using Docker, you can run the hardware observability dashboard manually:
 ```bash
 # Terminal 1: Launch FastAPI Backend
-cd backend && uvicorn main:app --reload
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 
 # Terminal 2: Launch React UI
-cd frontend && npm run dev
+cd frontend && npm install && npm run dev
 ```
 Navigate to `http://localhost:5173`.
 

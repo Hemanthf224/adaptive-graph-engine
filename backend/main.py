@@ -25,15 +25,12 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
         # Determine the absolute path to the project root assuming backend is in project_root/backend
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
-        # Convert Windows path (e.g. C:\all projects\...) to WSL path (/mnt/c/all projects/...)
-        wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
-        
-        # Build the path to the dataset
-        dataset_path = f"data/{dataset}"
-        
-        # Let's try running it as a native WSL command first, which works inside WSL and from Windows.
-        # Use --runs 4 for statistical averaging (1 cold start + 3 hot runs)
-        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --benchmark --runs 4"'
+        # Detect OS: If running in Docker (Linux), execute directly. If Windows, use WSL.
+        if os.name == 'posix':
+            cmd = f'cd {project_root} && ./build/src/graph_engine \'{dataset_path}\' --benchmark --runs 4'
+        else:
+            wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+            cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --benchmark --runs 4"'
         
         # Run the command and capture output
         result = subprocess.run(
@@ -82,11 +79,13 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
 def explain_scheduler(dataset: str = Query("amazon0302.txt")):
     try:
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
         dataset_path = f"data/{dataset}"
         
-        # Run without --benchmark to trigger AdaptiveScheduler
-        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\'"'
+        if os.name == 'posix':
+            cmd = f'cd {project_root} && ./build/src/graph_engine \'{dataset_path}\''
+        else:
+            wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+            cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\'"'
         
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         output = result.stdout + result.stderr
@@ -121,11 +120,13 @@ def explain_scheduler(dataset: str = Query("amazon0302.txt")):
 def run_scaling_analysis(dataset: str = Query("amazon0302.txt")):
     try:
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
         dataset_path = f"data/{dataset}"
         
-        # Run with --scaling
-        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --scaling"'
+        if os.name == 'posix':
+            cmd = f'cd {project_root} && ./build/src/graph_engine \'{dataset_path}\' --scaling'
+        else:
+            wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+            cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --scaling"'
         
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         output = result.stdout + result.stderr
