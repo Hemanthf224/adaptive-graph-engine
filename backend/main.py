@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import subprocess
 import re
 import os
@@ -155,5 +156,13 @@ def run_scaling_analysis(dataset: str = Query("amazon0302.txt")):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/trace")
+def download_trace():
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    trace_path = os.path.join(project_root, "trace.json")
+    if os.path.exists(trace_path):
+        return FileResponse(trace_path, filename="trace.json", media_type="application/json")
+    raise HTTPException(status_code=404, detail="Trace file not found. Run a benchmark first.")
 
 

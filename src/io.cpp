@@ -1,4 +1,5 @@
 #include "core/io.hpp"
+#include "core/profiler.hpp"
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -10,6 +11,7 @@ namespace graph_engine {
 namespace core {
 
 void save_graph_binary(const CSRGraph& graph, const std::string& filepath) {
+    PROFILE_FUNCTION();
     std::string bin_filepath = filepath + ".bin";
     std::cout << "[IO] Saving binary graph cache to: " << bin_filepath << "..." << std::endl;
     
@@ -30,6 +32,7 @@ void save_graph_binary(const CSRGraph& graph, const std::string& filepath) {
 }
 
 CSRGraph load_graph_binary(const std::string& filepath) {
+    PROFILE_FUNCTION();
     std::cout << "[IO] Loading binary graph from cache: " << filepath << "..." << std::endl;
     
     FILE* f = std::fopen(filepath.c_str(), "rb");
@@ -66,6 +69,7 @@ CSRGraph load_graph_binary(const std::string& filepath) {
 }
 
 CSRGraph load_graph(const std::string& filepath) {
+    PROFILE_FUNCTION();
     // 1. Check if a binary cache exists
     std::string bin_filepath = filepath + ".bin";
     FILE* test_f = std::fopen(bin_filepath.c_str(), "rb");

@@ -1,4 +1,5 @@
 #include "algorithms/page_rank.hpp"
+#include "core/profiler.hpp"
 #include <omp.h>
 #include <numeric>
 
@@ -6,6 +7,7 @@ namespace graph_engine {
 namespace algorithms {
 
 std::vector<float> pagerank_sequential(const core::CSRGraph& graph, int iterations, float damping) {
+    PROFILE_FUNCTION();
     size_t V = graph.num_vertices;
     std::vector<float> scores(V, 1.0f / V);
     std::vector<float> next_scores(V, 0.0f);
@@ -41,6 +43,7 @@ std::vector<float> pagerank_sequential(const core::CSRGraph& graph, int iteratio
 }
 
 std::vector<float> pagerank_openmp(const core::CSRGraph& graph, int iterations, float damping) {
+    PROFILE_FUNCTION();
     size_t V = graph.num_vertices;
     std::vector<float> scores(V, 1.0f / V);
     std::vector<float> next_scores(V, 0.0f);

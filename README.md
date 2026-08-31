@@ -17,6 +17,7 @@ This system is engineered for the execution of massive-scale graph algorithms (e
 ## Table of Contents
 - [Documentation](#documentation)
 - [Architecture and Core Capabilities](#architecture-and-core-capabilities)
+- [Microsecond Execution Profiler](#microsecond-execution-profiler)
 - [Technical Architecture Flow](#technical-architecture-flow)
 - [Quickstart (Docker)](#quickstart-docker)
 - [Manual Build & Installation](#manual-build--installation)
@@ -55,6 +56,20 @@ The engine features a heuristic-based `AdaptiveScheduler` that analyzes graph to
 ### 5. High-Throughput Binary Serialization
 - Eliminates standard ASCII parsing bottlenecks by compiling raw Compressed Sparse Row (CSR) memory layouts directly to SSD storage caches (`.bin`).
 - Achieves sub-200ms loading latencies for 68-million edge datasets by reading contiguous byte blocks directly into RAM via `std::fread`.
+
+---
+
+## Microsecond Execution Profiler
+
+The Adaptive Graph Engine features an integrated C++ RAII Profiler that tracks execution time down to the microsecond for all algorithms (PageRank, BFS, CC, SSSP). 
+
+Every time the engine runs, it dumps a `trace.json` file. You can drag and drop this file into a Chromium-based browser to visualize exactly what every thread was doing on a colored timeline.
+
+**How to view traces:**
+1. Run the C++ engine (e.g. `./build/src/graph_engine ../data/amazon0302.txt`)
+2. Open Google Chrome or Microsoft Edge.
+3. Type `chrome://tracing` (or `edge://tracing`) in the URL bar.
+4. Drag and drop the generated `trace.json` file into the window.
 
 ---
 

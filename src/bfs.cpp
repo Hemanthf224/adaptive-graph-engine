@@ -1,4 +1,5 @@
 #include "algorithms/bfs.hpp"
+#include "core/profiler.hpp"
 #include <queue>
 #include <omp.h>
 
@@ -6,6 +7,7 @@ namespace graph_engine {
 namespace algorithms {
 
 std::vector<int32_t> bfs_sequential(const core::CSRGraph& graph, core::vertex_id_t source) {
+    PROFILE_FUNCTION();
     std::vector<int32_t> distances(graph.num_vertices, -1);
     
     if (source >= graph.num_vertices) return distances;
@@ -34,6 +36,7 @@ std::vector<int32_t> bfs_sequential(const core::CSRGraph& graph, core::vertex_id
 }
 
 std::vector<int32_t> bfs_openmp(const core::CSRGraph& graph, core::vertex_id_t source) {
+    PROFILE_FUNCTION();
     std::vector<int32_t> distances(graph.num_vertices, -1);
     
     if (source >= graph.num_vertices) return distances;

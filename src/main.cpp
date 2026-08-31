@@ -15,9 +15,12 @@
 #include "algorithms/connected_components.hpp"
 #include "algorithms/connected_components_cuda.cuh"
 #include "algorithms/sssp.hpp"
+#include "core/profiler.hpp"
 #include <iomanip>
 
 int main(int argc, char** argv) {
+    graph_engine::core::Profiler::Get().BeginSession("AdaptiveGraph_Trace", "trace.json");
+
     // Initialize MPI
     MPI_Init(&argc, &argv);
 
@@ -262,6 +265,7 @@ int main(int argc, char** argv) {
     }
 
     // Finalize MPI
+    graph_engine::core::Profiler::Get().EndSession();
     MPI_Finalize();
     return 0;
 }
