@@ -18,6 +18,7 @@
 #include "algorithms/triangle_count.hpp"
 #include "core/profiler.hpp"
 #include "core/arena.hpp"
+#include "core/cxxopts.hpp"
 #include <iomanip>
 
 int main(int argc, char** argv) {
@@ -78,28 +79,31 @@ int main(int argc, char** argv) {
         // ==========================================
         std::cout << "Starting Adaptive Graph Engine (Single Node)...\n" << std::endl;
         
-        bool run_benchmark = false;
-        bool run_scaling = false;
-        bool run_cc = false;
-        bool run_sssp = false;
-        bool run_triangles = false;
-        int num_runs = 4; // 1 cold start + 3 hot runs
+        cxxopts::Options options("graph_engine", "Adaptive Graph Engine");
+        options.allow_unrecognised_options();
+        options.add_options()
+            ("benchmark", "Run full benchmarking suite")
+            ("scaling", "Run Amdahl's Law thread scaling analysis")
+            ("cc", "Run Connected Components")
+            ("sssp", "Run Single Source Shortest Path")
+            ("triangles", "Run Triangle Counting")
+            ("runs", "Number of benchmark iterations", cxxopts::value<int>()->default_value("4"));
+
+        auto result = options.parse(argc, argv);
+        
+        bool run_benchmark = result.count("benchmark");
+        bool run_scaling = result.count("scaling");
+        bool run_cc = result.count("cc");
+        bool run_sssp = result.count("sssp");
+        bool run_triangles = result.count("triangles");
+        int num_runs = result["runs"].as<int>();
         std::string filepath = "";
 
-        if (argc > 1) {
+        if (argc > 1 && argv[1][0] != '-') {
             filepath = argv[1];
-            for (int i = 2; i < argc; ++i) {
-                std::string arg = argv[i];
-                if (arg == "--benchmark") run_benchmark = true;
-                if (arg == "--scaling") run_scaling = true;
-                if (arg == "--cc") run_cc = true;
-                if (arg == "--sssp") run_sssp = true;
-                if (arg == "--triangles") run_triangles = true;
-                if (arg == "--runs" && i + 1 < argc) {
-                    num_runs = std::stoi(argv[++i]);
-                }
-            }
-            
+        }
+
+        if (!filepath.empty()) {
             std::cout << "Loading graph from: " << filepath << std::endl;
             try {
                 graph_engine::core::CSRGraph graph = graph_engine::core::load_graph(filepath);

@@ -2,6 +2,7 @@
 #include "core/profiler.hpp"
 #include <omp.h>
 #include <numeric>
+#include <immintrin.h> // AVX2 SIMD Intrinsics
 
 namespace graph_engine {
 namespace algorithms {
@@ -51,9 +52,23 @@ std::vector<float> pagerank_openmp(const core::CSRGraph& graph, int iterations, 
 
     for (int iter = 0; iter < iterations; ++iter) {
         
-        #pragma omp parallel for
-        for (core::vertex_id_t i = 0; i < V; ++i) {
-            next_scores[i] = base_score;
+        #pragma omp parallel
+        {
+            // AVX2 SIMD Vectorization for O(1) clock cycle initialization
+            __m256 v_base = _mm256_set1_ps(base_score);
+            
+            #pragma omp for schedule(static)
+            for (core::vertex_id_t i = 0; i < V - (V % 8); i += 8) {
+                _mm256_storeu_ps(&next_scores[i], v_base);
+            }
+
+            // Scalar remainder fallback
+            #pragma omp single
+            {
+                for (core::vertex_id_t i = V - (V % 8); i < V; ++i) {
+                    next_scores[i] = base_score;
+                }
+            }
         }
 
         #pragma omp parallel for schedule(dynamic, 1024)
