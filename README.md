@@ -114,7 +114,7 @@ Navigate to `http://localhost:5173`.
 
 ## Contributors
 
-- **M. Hemanth Reddy** - *Lead Software Engineer / HPC Developer*
+- **M. Hemanth Reddy**
 
 ---
 
