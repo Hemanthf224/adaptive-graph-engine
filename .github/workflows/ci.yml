@@ -27,17 +27,24 @@ jobs:
         # Install minimal toolkit to compile .cu files (nvcc)
         
     - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake ..
+      run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCOVERAGE=ON
 
-    - name: Build C++ Engine
-      run: |
-        cd build
-        make -j4
+    - name: Build
+      run: cmake --build build --config Release -j$(nproc)
 
-    - name: Run Unit Tests (Google Test)
+    - name: Run Tests
+      working-directory: build
+      run: ctest --output-on-failure
+      
+    - name: Generate Code Coverage (LCOV)
       run: |
-        cd build
-        ./tests/test_algorithms
+        sudo apt-get install lcov
+        lcov --capture --directory build/src --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/external/*' --output-file coverage.info
+        lcov --list coverage.info
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.info
+        fail_ci_if_error: false

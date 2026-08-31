@@ -1,6 +1,7 @@
 # Adaptive Graph Engine
 
 [![C++ Graph Engine CI](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Hemanthf224/adaptive-graph-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Hemanthf224/adaptive-graph-engine)
 [![Doxygen Docs](https://img.shields.io/badge/Docs-Doxygen-blue)](https://hemanthf224.github.io/adaptive-graph-engine)
 ![C++](https://img.shields.io/badge/C++-17-blue.svg)
 ![CUDA](https://img.shields.io/badge/CUDA-12.0-76B900.svg)
