@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import subprocess
+import asyncio
 import re
 import os
+import json
 
 app = FastAPI(title="Adaptive Graph Engine API")
 
@@ -164,5 +166,94 @@ def download_trace():
     if os.path.exists(trace_path):
         return FileResponse(trace_path, filename="trace.json", media_type="application/json")
     raise HTTPException(status_code=404, detail="Trace file not found. Run a benchmark first.")
+
+@app.websocket("/ws/stream")
+async def websocket_stream(websocket: WebSocket, dataset: str = "amazon0302.txt", mode: str = "benchmark"):
+    await websocket.accept()
+    try:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        dataset_path = f"data/{dataset}"
+        
+        args = ""
+        if mode == "benchmark": args = "--benchmark --runs 4"
+        elif mode == "scaling": args = "--scaling"
+        elif mode == "cc": args = "--cc"
+        elif mode == "sssp": args = "--sssp"
+        elif mode == "triangles": args = "--triangles"
+
+        if os.name == 'posix':
+            cmd = f'cd {project_root} && ./build/src/graph_engine \'{dataset_path}\' {args}'
+        else:
+            wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+            cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' {args}"'
+        
+        # Run subprocess asynchronously and stream stdout line-by-line
+        process = await asyncio.create_subprocess_shell(
+            cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT
+        )
+
+        while True:
+            line = await process.stdout.readline()
+            if not line:
+                break
+            
+            decoded_line = line.decode('utf-8').rstrip()
+            if decoded_line:
+                await websocket.send_text(decoded_line)
+                
+        await process.wait()
+        await websocket.send_text("[SYSTEM] Execution Completed.")
+        
+    except WebSocketDisconnect:
+        print("Client disconnected.")
+    except Exception as e:
+        await websocket.send_text(f"[ERROR] {str(e)}")
+    finally:
+        try:
+            await websocket.close()
+        except:
+            pass
+
+@app.get("/api/topology")
+def get_topology(dataset: str = "amazon0302.txt"):
+    """
+    Returns a small subset of the graph (nodes and links) for Force-Graph visualization in the frontend.
+    Instead of loading the C++ graph, we quickly parse the text file in Python just to get the first 500 edges.
+    """
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    dataset_path = os.path.join(project_root, "data", dataset)
+    
+    if not os.path.exists(dataset_path):
+        raise HTTPException(status_code=404, detail="Dataset not found")
+        
+    nodes = set()
+    links = []
+    
+    # Fast parse: just read first 500 valid edges to not crash the browser
+    try:
+        with open(dataset_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'): continue
+                
+                parts = line.split()
+                if len(parts) >= 2:
+                    u = int(parts[0])
+                    v = int(parts[1])
+                    
+                    nodes.add(u)
+                    nodes.add(v)
+                    links.append({"source": u, "target": v})
+                    
+                    if len(links) >= 500:
+                        break
+                        
+        node_list = [{"id": n, "group": 1} for n in nodes]
+        return {"nodes": node_list, "links": links}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 

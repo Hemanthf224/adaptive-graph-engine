@@ -15,6 +15,7 @@
 #include "algorithms/connected_components.hpp"
 #include "algorithms/connected_components_cuda.cuh"
 #include "algorithms/sssp.hpp"
+#include "algorithms/triangle_count.hpp"
 #include "core/profiler.hpp"
 #include <iomanip>
 
@@ -77,6 +78,7 @@ int main(int argc, char** argv) {
         bool run_scaling = false;
         bool run_cc = false;
         bool run_sssp = false;
+        bool run_triangles = false;
         int num_runs = 4; // 1 cold start + 3 hot runs
         std::string filepath = "";
 
@@ -88,6 +90,7 @@ int main(int argc, char** argv) {
                 if (arg == "--scaling") run_scaling = true;
                 if (arg == "--cc") run_cc = true;
                 if (arg == "--sssp") run_sssp = true;
+                if (arg == "--triangles") run_triangles = true;
                 if (arg == "--runs" && i + 1 < argc) {
                     num_runs = std::stoi(argv[++i]);
                 }
@@ -244,6 +247,20 @@ int main(int argc, char** argv) {
                     std::cout << "----------------------------------------------------\n";
                     std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << time_seq << "1.0x\n";
                     std::cout << "====================================================\n";
+
+                } else if (run_triangles) {
+                    std::cout << "\n======================================================\n";
+                    std::cout << "        TRIANGLE COUNTING (COMMUNITY DETECTION)       \n";
+                    std::cout << "======================================================\n";
+                    std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
+                    
+                    auto start_omp = std::chrono::high_resolution_clock::now();
+                    uint64_t triangles = graph_engine::algorithms::triangle_counting_openmp(graph);
+                    auto end_omp = std::chrono::high_resolution_clock::now();
+                    double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
+                    
+                    std::cout << "[SUCCESS] Found " << triangles << " triangles.\n";
+                    std::cout << "[INFO] OpenMP Time : " << time_omp << " ms\n";
 
                 } else {
                     std::cout << "\n--- Adaptive Engine Execution ---\n";
