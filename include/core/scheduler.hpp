@@ -15,12 +15,21 @@ enum class ExecutionMode {
     CUDA
 };
 
+// Represents the explainable AI decision of the scheduler
+struct SchedulerDecision {
+    ExecutionMode selected_mode;
+    double cpu_score;
+    double omp_score;
+    double cuda_score;
+    std::string reasoning;
+};
+
 // The Adaptive Scheduler analyzes the graph properties at runtime
 // and dispatches the execution to the most optimal hardware layer.
 class AdaptiveScheduler {
 public:
-    // Analyzes graph and returns the determined execution mode
-    static ExecutionMode determine_optimal_mode(const CSRGraph& graph);
+    // Analyzes graph and returns the determined execution mode and its mathematical reasoning
+    static SchedulerDecision determine_optimal_mode(const CSRGraph& graph);
 
     // Executes Breadth-First Search using the dynamically determined mode
     static std::vector<int32_t> execute_bfs(const CSRGraph& graph, vertex_id_t source);

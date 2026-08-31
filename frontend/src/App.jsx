@@ -4,8 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 const datasets = [
   { file: 'amazon0302.txt', name: 'Amazon', edges: 1234877 },
   { file: 'web-Google.txt', name: 'Google', edges: 5105039 },
-  { file: 'soc-LiveJournal1.txt', name: 'LiveJournal', edges: 68993773 },
-  { file: 'com-orkut.ungraph.txt', name: 'Orkut', edges: 117185083 }
+  { file: 'soc-LiveJournal1.txt', name: 'LiveJournal', edges: 68993773 }
 ]
 
 const TOTAL_VRAM_BYTES = 8 * 1024 * 1024 * 1024; // 8GB for RTX 5060
@@ -20,8 +19,12 @@ function App() {
   const [logs, setLogs] = useState(["[SYSTEM] Adaptive Graph Engine Initialized", "[SYSTEM] Waiting for execution command..."])
   const terminalRef = useRef(null)
 
-  // VRAM state (calculate how many of the 256 blocks are active)
+  // VRAM state
   const [activeBlocks, setActiveBlocks] = useState(0)
+
+  // Scheduler Telemetry State
+  const [schedulerData, setSchedulerData] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -31,6 +34,36 @@ function App() {
 
   const appendLog = (msg) => {
     setLogs(prev => [...prev, msg])
+  }
+
+  const runTopologyAnalysis = async () => {
+    setAnalyzing(true)
+    setError(null)
+    setSchedulerData(null)
+    setLogs(["[SYSTEM] Connecting to Explainable AI Scheduler..."])
+    
+    try {
+      // Analyze the LiveJournal dataset to show off the memory contention logic!
+      const ds = datasets[2] // LiveJournal
+      appendLog(`[SCHEDULER] Analyzing Topology: ${ds.file}...`)
+      
+      const response = await fetch(`http://localhost:8000/api/scheduler?dataset=${ds.file}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheduler telemetry")
+      }
+      
+      const data = await response.json()
+      setSchedulerData(data)
+      
+      appendLog(`[SCHEDULER] Topology analyzed successfully.`)
+      appendLog(`[STDOUT]\n${data.raw_output}`)
+      
+    } catch (err) {
+      setError(err.message)
+      appendLog(`[ERROR] ${err.message}`)
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   const runBenchmarkAll = async () => {
@@ -47,20 +80,17 @@ function App() {
         setStatusText(`[RUNNING] ${ds.file}`)
         appendLog(`[EXEC] Requesting ${ds.file} via Python Subprocess...`)
         
-        // Calculate theoretical VRAM usage for the UI (Edges * 4 bytes roughly)
         const bytesUsed = ds.edges * 4
         const percentage = bytesUsed / TOTAL_VRAM_BYTES
         const blocks = Math.ceil(percentage * 256)
         setActiveBlocks(blocks)
 
         const response = await fetch(`http://localhost:8000/api/benchmark?dataset=${ds.file}`)
-        
         if (!response.ok) {
           throw new Error(`Failed to fetch ${ds.name} from backend`)
         }
         
         const data = await response.json()
-        
         appendLog(`[STDOUT] \n${data.raw_output}`)
         appendLog(`[SUCCESS] ${ds.name} Parsed. CPU: ${data.results.sequential}ms | CUDA: ${data.results.cuda}ms`)
 
@@ -85,7 +115,6 @@ function App() {
     }
   }
 
-  // Generate 256 tiny squares for the VRAM map
   const renderVRAMMap = () => {
     const blocks = []
     for (let i = 0; i < 256; i++) {
@@ -106,8 +135,16 @@ function App() {
       <div className="controls">
         <button 
           className="run-btn" 
+          onClick={runTopologyAnalysis} 
+          disabled={loading || analyzing}
+        >
+          {analyzing ? '[██████░░░░] ANALYZING...' : '>_ ANALYZE_TOPOLOGY'}
+        </button>
+
+        <button 
+          className="run-btn" 
           onClick={runBenchmarkAll} 
-          disabled={loading}
+          disabled={loading || analyzing}
         >
           {loading ? (
             <>
@@ -123,6 +160,25 @@ function App() {
       {error && (
         <div style={{ color: '#ff3333', marginTop: '10px' }}>
           FATAL_ERROR: {error}
+        </div>
+      )}
+
+      {schedulerData && (
+        <div className="panel" style={{ borderLeft: '4px solid #76B900', backgroundColor: '#0f170a' }}>
+          <div className="panel-title" style={{ color: '#76B900' }}>EXPLAINABLE_AI_SCHEDULER</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', marginTop: '10px' }}>
+            <div>
+              <p><strong>Dataset:</strong> {schedulerData.dataset}</p>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '5px' }}>CPU Score: {schedulerData.cpu_score.toFixed(2)}</p>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>OpenMP Score: {schedulerData.omp_score.toFixed(2)}</p>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>CUDA Score: {schedulerData.cuda_score.toFixed(2)}</p>
+              <p style={{ color: '#76B900', marginTop: '10px', fontWeight: 'bold' }}>SELECTED: {schedulerData.selected}</p>
+            </div>
+            <div style={{ padding: '15px', backgroundColor: '#050505', border: '1px solid #222', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              <span style={{ color: '#76B900' }}>[REASONING_ENGINE]</span><br />
+              {schedulerData.reasoning}
+            </div>
+          </div>
         </div>
       )}
 

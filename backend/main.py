@@ -74,3 +74,43 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/scheduler")
+def explain_scheduler(dataset: str = Query("amazon0302.txt")):
+    try:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+        dataset_path = f"data/{dataset}"
+        
+        # Run without --benchmark to trigger AdaptiveScheduler
+        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\'"'
+        
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        output = result.stdout + result.stderr
+        
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"C++ Engine Failed: {output}")
+
+        cpu_score = re.search(r"CPU Score\s+:\s+([0-9.-]+)", output)
+        omp_score = re.search(r"OMP Score\s+:\s+([0-9.-]+)", output)
+        cuda_score = re.search(r"CUDA Score\s+:\s+([0-9.-]+)", output)
+        reasoning = re.search(r"Reasoning\s+:\s+(.*)", output)
+        selected = re.search(r"Selected\s+:\s+(.*)", output)
+
+        if not (cpu_score and omp_score and cuda_score and reasoning and selected):
+            raise HTTPException(status_code=500, detail=f"Failed to parse scheduler output: {output}")
+
+        return {
+            "success": True,
+            "dataset": dataset,
+            "cpu_score": float(cpu_score.group(1)),
+            "omp_score": float(omp_score.group(1)),
+            "cuda_score": float(cuda_score.group(1)),
+            "reasoning": reasoning.group(1).strip(),
+            "selected": selected.group(1).strip(),
+            "raw_output": output
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
