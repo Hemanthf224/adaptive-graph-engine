@@ -110,7 +110,7 @@ function App() {
     setActiveBlocks(0)
     setLogs(["[SYSTEM] Commencing Large-Scale Benchmark Sequence..."])
     
-    const newChartData = []
+        const newChartData = []
 
     try {
       for (const ds of datasets) {
@@ -129,14 +129,15 @@ function App() {
         
         const data = await response.json()
         appendLog(`[STDOUT] \n${data.raw_output}`)
-        appendLog(`[SUCCESS] ${ds.name} Parsed. CPU: ${data.results.sequential}ms | CUDA: ${data.results.cuda}ms`)
+        appendLog(`[SUCCESS] ${ds.name} Parsed. CPU: ${data.results.sequential}ms | UVM: ${data.results.cuda_uvm}ms | Explicit: ${data.results.cuda_explicit}ms`)
 
         newChartData.push({
           name: ds.name,
           edges: data.edges,
           Sequential: data.results.sequential,
           OpenMP: data.results.openmp,
-          CUDA: data.results.cuda
+          CUDA_UVM: data.results.cuda_uvm,
+          CUDA_Explicit: data.results.cuda_explicit
         })
         
         setChartData([...newChartData])
@@ -263,7 +264,8 @@ function App() {
                   <Legend verticalAlign="top" height={36} />
                   <Line type="monotone" dataKey="Sequential" stroke="#94a3b8" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
                   <Line type="monotone" dataKey="OpenMP" stroke="#0071c5" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
-                  <Line type="monotone" dataKey="CUDA" stroke="#76b900" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
+                  <Line type="monotone" dataKey="CUDA_UVM" stroke="#76b900" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
+                  <Line type="monotone" dataKey="CUDA_Explicit" stroke="#ff3333" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

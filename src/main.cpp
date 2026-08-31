@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
                     }
                     avg_time_omp /= valid_runs;
 
-                    // 3. CUDA
-                    std::cout << "[Running] CUDA PageRank (20 Iterations, " << num_runs << " runs)...\n";
+                    // 3. CUDA (Unified Memory)
+                    std::cout << "[Running] CUDA PageRank (UVM, 20 Iterations, " << num_runs << " runs)...\n";
                     
                     // WARM START: Prefetch UVM Memory to the GPU before measuring performance
                     int deviceId = 0;
@@ -99,12 +99,26 @@ int main(int argc, char** argv) {
                     }
                     avg_time_cuda /= valid_runs;
 
+                    // 4. CUDA (Explicit Copy)
+                    double avg_time_cuda_exp = 0.0;
+                    std::cout << "[Running] CUDA PageRank (Explicit, 20 Iterations, " << num_runs << " runs)...\n";
+                    
+                    for (int r = 0; r < num_runs; ++r) {
+                        auto start_cuda_exp = std::chrono::high_resolution_clock::now();
+                        std::vector<float> pr_cuda_exp = graph_engine::algorithms::pagerank_cuda_explicit(graph, 20);
+                        auto end_cuda_exp = std::chrono::high_resolution_clock::now();
+                        double time_cuda_exp = std::chrono::duration<double, std::milli>(end_cuda_exp - start_cuda_exp).count();
+                        if (num_runs == 1 || r > 0) avg_time_cuda_exp += time_cuda_exp;
+                    }
+                    avg_time_cuda_exp /= valid_runs;
+
                     std::cout << "\n================ PERFORMANCE REPORT ================\n";
                     std::cout << std::left << std::setw(20) << "Hardware" << std::setw(20) << "Avg Time (ms)" << "Speedup vs Seq\n";
                     std::cout << "----------------------------------------------------\n";
                     std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << avg_time_seq << "1.0x\n";
                     std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << avg_time_omp << (avg_time_seq/avg_time_omp) << "x\n";
-                    std::cout << std::left << std::setw(20) << "GPU CUDA"       << std::setw(20) << avg_time_cuda << (avg_time_seq/avg_time_cuda) << "x\n";
+                    std::cout << std::left << std::setw(20) << "GPU CUDA (UVM)" << std::setw(20) << avg_time_cuda << (avg_time_seq/avg_time_cuda) << "x\n";
+                    std::cout << std::left << std::setw(20) << "GPU CUDA (Expl)" << std::setw(20) << avg_time_cuda_exp << (avg_time_seq/avg_time_cuda_exp) << "x\n";
                     std::cout << "====================================================\n";
 
                 } else if (run_scaling) {

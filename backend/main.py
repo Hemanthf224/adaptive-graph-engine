@@ -51,13 +51,14 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
         # Parse the execution times from the output using Regex
         seq_match = re.search(r"CPU Sequential\s+([0-9.]+)", output)
         omp_match = re.search(r"CPU OpenMP\s+([0-9.]+)", output)
-        cuda_match = re.search(r"GPU CUDA\s+([0-9.]+)", output)
+        cuda_match = re.search(r"GPU CUDA \(UVM\)\s+([0-9.]+)", output)
+        cuda_exp_match = re.search(r"GPU CUDA \(Expl\)\s+([0-9.]+)", output)
         
         # Parse graph metadata
         v_match = re.search(r"V=([0-9]+)", output)
         e_match = re.search(r"E=([0-9]+)", output)
 
-        if not (seq_match and omp_match and cuda_match and v_match and e_match):
+        if not (seq_match and omp_match and cuda_match and cuda_exp_match and v_match and e_match):
             raise HTTPException(status_code=500, detail=f"Failed to parse engine output: {output}")
 
         return {
@@ -68,7 +69,8 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
             "results": {
                 "sequential": float(seq_match.group(1)),
                 "openmp": float(omp_match.group(1)),
-                "cuda": float(cuda_match.group(1))
+                "cuda_uvm": float(cuda_match.group(1)),
+                "cuda_explicit": float(cuda_exp_match.group(1))
             },
             "raw_output": output
         }
