@@ -17,10 +17,14 @@
 #include "algorithms/sssp.hpp"
 #include "algorithms/triangle_count.hpp"
 #include "core/profiler.hpp"
+#include "core/arena.hpp"
 #include <iomanip>
 
 int main(int argc, char** argv) {
     graph_engine::core::Profiler::Get().BeginSession("AdaptiveGraph_Trace", "trace.json");
+
+    // Initialize Global Memory Arena (1GB Pre-allocation for temporal data)
+    graph_engine::core::LinearArenaAllocator global_arena(1024ULL * 1024ULL * 1024ULL);
 
     // Initialize MPI
     MPI_Init(&argc, &argv);

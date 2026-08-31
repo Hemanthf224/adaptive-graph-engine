@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import ForceGraph2D from 'react-force-graph-2d'
+import ForceGraph3D from 'react-force-graph-3d'
 
 const datasets = [
   { file: 'amazon0302.txt', name: 'Amazon', edges: 1234877 },
@@ -174,10 +174,10 @@ function App() {
       <div className="grid-layout">
         <div className="panel" style={{ padding: '0', height: '400px', overflow: 'hidden', position: 'relative' }}>
           <div className="panel-title" style={{ position: 'absolute', top: 10, left: 10, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.8)' }}>
-            LIVE_TOPOLOGY_VISUALIZATION
+            LIVE_3D_TOPOLOGY_VISUALIZATION
           </div>
           {graphData.nodes.length > 0 ? (
-            <ForceGraph2D
+            <ForceGraph3D
               graphData={graphData}
               width={800}
               height={400}
@@ -185,6 +185,9 @@ function App() {
               linkColor={() => '#333'}
               nodeRelSize={4}
               backgroundColor="#0A0A0A"
+              enableNodeDrag={true}
+              enableNavigationControls={true}
+              showNavInfo={true}
             />
           ) : (
             <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
