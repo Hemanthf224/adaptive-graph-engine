@@ -9,6 +9,7 @@
 #include "core/property_graph.hpp"
 #include "core/query_parser.hpp"
 #include "algorithms/gnn_layer.hpp"
+#include "algorithms/quantum_simulator.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -68,4 +69,7 @@ PYBIND11_MODULE(adaptive_graph, m) {
           
     m.def("gcn_forward_pass", &algorithms::GCNLayer::forward_pass, "Run a Graph Convolutional Network (GCN) Forward Pass",
           py::arg("graph"), py::arg("node_features"), py::arg("layer_weight"));
+          
+    m.def("quantum_grover_search", &algorithms::QuantumSimulator::grover_search, "Simulate Quantum Grover Search for a vertex",
+          py::arg("graph"), py::arg("target_vertex"), py::arg("iterations") = 1);
 }

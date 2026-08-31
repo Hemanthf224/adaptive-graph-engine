@@ -81,6 +81,7 @@ pybind11_add_module(adaptive_graph
     src/sssp.cpp
     src/query_parser.cpp
     src/gnn_layer.cpp
+    src/quantum_simulator.cpp
 )
 
 # Link requirements for Python Module

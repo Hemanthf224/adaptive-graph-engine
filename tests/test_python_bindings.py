@@ -67,7 +67,13 @@ def main():
     next_features = age.gcn_forward_pass(graph, node_features, layer_weight)
     print(f"GCN Output Features (Top 5): {next_features[:5]}")
 
-    print("\n[SUCCESS] Python bindings and AI Engine are fully operational!")
+    # 7. Quantum Graph Simulator
+    print("\n[7] Simulating Quantum Grover Search for Vertex 2...")
+    # By default, iterations = max(1, (pi/4)*sqrt(N))
+    quantum_probs = age.quantum_grover_search(graph, target_vertex=2)
+    print(f"Quantum Measurement Probabilities: {quantum_probs}")
+    
+    print("\n[SUCCESS] Python bindings, AI Engine, and Quantum Simulator are fully operational!")
 
 if __name__ == "__main__":
     main()
