@@ -90,7 +90,16 @@ def main():
     is_valid = age.zkp_verify(graph, commitment, proof)
     print(f"    Proof verified (without seeing scores!): {is_valid}")
 
-    print("\n[SUCCESS] Hardware, AI, Quantum, FHE, and ZKP Graph Analytics are all operational!")
+    # 10. Differential Privacy (epsilon, 0)-DP PageRank
+    print("\n[10] Running (epsilon=1.0, delta=0)-Differentially Private PageRank...")
+    sensitivity = age.pagerank_sensitivity(graph, 0.85)
+    print(f"     Global L1 Sensitivity (Blocki et al.): {sensitivity:.6f}")
+    dp_result = age.dp_pagerank(graph, epsilon=1.0, iterations=20)
+    print(f"     Noise Scale (Laplace): {dp_result.noise_scale:.6f}")
+    print(f"     DP Noisy Scores (Top 5): {dp_result.noisy_scores[:5]}")
+    print(f"     Privacy Budget Consumed: epsilon={dp_result.epsilon_used}")
+
+    print("\n[SUCCESS] The complete Privacy Stack (FHE + ZKP + DP) is operational!")
 
 if __name__ == "__main__":
     main()

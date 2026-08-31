@@ -12,6 +12,7 @@
 #include "algorithms/quantum_simulator.hpp"
 #include "algorithms/fhe_simulator.hpp"
 #include "algorithms/zkp_verifier.hpp"
+#include "algorithms/differential_privacy.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -100,4 +101,24 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("zkp_verify", &algorithms::ZKPVerifier::verify,
           "Verify a ZKP without seeing the underlying scores",
           py::arg("graph"), py::arg("commitment"), py::arg("proof"));
+
+    // Differential Privacy Bindings
+    py::class_<algorithms::DPConfig>(m, "DPConfig")
+        .def(py::init<double, double, double>())
+        .def_readwrite("epsilon", &algorithms::DPConfig::epsilon)
+        .def_readwrite("delta", &algorithms::DPConfig::delta)
+        .def_readwrite("sensitivity", &algorithms::DPConfig::sensitivity);
+
+    py::class_<algorithms::DPResult>(m, "DPResult")
+        .def_readwrite("noisy_scores", &algorithms::DPResult::noisy_scores)
+        .def_readwrite("epsilon_used", &algorithms::DPResult::epsilon_used)
+        .def_readwrite("noise_scale", &algorithms::DPResult::noise_scale);
+
+    m.def("dp_pagerank", &algorithms::DifferentialPrivacy::dp_pagerank,
+          "Run (epsilon, 0)-Differentially Private PageRank via Laplace Mechanism",
+          py::arg("graph"), py::arg("epsilon"), py::arg("iterations") = 20);
+
+    m.def("pagerank_sensitivity", &algorithms::DifferentialPrivacy::pagerank_sensitivity,
+          "Compute the L1 global sensitivity of PageRank (Blocki-Blum-Datta-Sheffet bound)",
+          py::arg("graph"), py::arg("damping") = 0.85);
 }
