@@ -4,7 +4,7 @@ target_link_libraries(graph_core PUBLIC OpenMP::OpenMP_CXX MPI::MPI_CXX CUDA::cu
 target_include_directories(graph_core PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Create algorithms library
-add_library(graph_algorithms STATIC bfs.cpp bfs_cuda.cu page_rank.cpp page_rank_cuda.cu page_rank_mpi.cpp connected_components.cpp connected_components_cuda.cu sssp.cpp partitioning.cpp gnn_layer.cpp quantum_simulator.cpp fhe_simulator.cpp zkp_verifier.cpp differential_privacy.cpp federated_learning.cpp sketching.cpp)
+add_library(graph_algorithms STATIC bfs.cpp bfs_cuda.cu page_rank.cpp page_rank_cuda.cu page_rank_mpi.cpp connected_components.cpp connected_components_cuda.cu sssp.cpp partitioning.cpp gnn_layer.cpp quantum_simulator.cpp fhe_simulator.cpp zkp_verifier.cpp differential_privacy.cpp federated_learning.cpp sketching.cpp aerospace_tmr.cpp)
 target_link_libraries(graph_algorithms PUBLIC graph_core)
 
 # Main executable

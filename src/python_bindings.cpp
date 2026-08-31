@@ -15,6 +15,7 @@
 #include "algorithms/differential_privacy.hpp"
 #include "algorithms/federated_learning.hpp"
 #include "algorithms/sketching.hpp"
+#include "algorithms/aerospace_tmr.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -151,4 +152,13 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("query_edge_freq", &algorithms::GraphSketcher::query_edge_frequency,
           "Query estimated frequency of edge (u,v) from a Count-Min Sketch",
           py::arg("sketch"), py::arg("u"), py::arg("v"));
+
+    // Aerospace TMR Bindings
+    py::class_<algorithms::TMRResult>(m, "TMRResult")
+        .def_readwrite("robust_scores", &algorithms::TMRResult::robust_scores)
+        .def_readwrite("faults_detected", &algorithms::TMRResult::faults_detected);
+
+    m.def("tmr_pagerank", &algorithms::AerospaceTMR::tmr_pagerank,
+          "Run Radiation-Hardened PageRank using Triple Modular Redundancy (TMR)",
+          py::arg("graph"), py::arg("iterations") = 20, py::arg("damping") = 0.85f, py::arg("simulate_cosmic_ray") = false);
 }

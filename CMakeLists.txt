@@ -87,6 +87,7 @@ pybind11_add_module(adaptive_graph
     src/differential_privacy.cpp
     src/federated_learning.cpp
     src/sketching.cpp
+    src/aerospace_tmr.cpp
 )
 
 # Link requirements for Python Module
