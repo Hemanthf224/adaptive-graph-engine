@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "types.hpp"
+#include "uvm_allocator.hpp"
 
 namespace graph_engine {
 namespace core {

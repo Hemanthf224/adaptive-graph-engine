@@ -14,6 +14,7 @@
 #include "algorithms/page_rank_cuda.cuh"
 #include "algorithms/connected_components.hpp"
 #include "algorithms/connected_components_cuda.cuh"
+#include "algorithms/sssp.hpp"
 #include <iomanip>
 
 int main(int argc, char** argv) {
@@ -72,6 +73,7 @@ int main(int argc, char** argv) {
         bool run_benchmark = false;
         bool run_scaling = false;
         bool run_cc = false;
+        bool run_sssp = false;
         int num_runs = 4; // 1 cold start + 3 hot runs
         std::string filepath = "";
 
@@ -82,6 +84,7 @@ int main(int argc, char** argv) {
                 if (arg == "--benchmark") run_benchmark = true;
                 if (arg == "--scaling") run_scaling = true;
                 if (arg == "--cc") run_cc = true;
+                if (arg == "--sssp") run_sssp = true;
                 if (arg == "--runs" && i + 1 < argc) {
                     num_runs = std::stoi(argv[++i]);
                 }
@@ -218,6 +221,25 @@ int main(int argc, char** argv) {
                     std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << time_seq << "1.0x\n";
                     std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << time_omp << (time_seq/time_omp) << "x\n";
                     std::cout << std::left << std::setw(20) << "GPU CUDA (UVM)" << std::setw(20) << time_cuda << (time_seq/time_cuda) << "x\n";
+                    std::cout << "====================================================\n";
+
+                } else if (run_sssp) {
+                    std::cout << "\n======================================================\n";
+                    std::cout << "        SINGLE-SOURCE SHORTEST PATH BENCHMARK         \n";
+                    std::cout << "======================================================\n";
+                    std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
+                    std::cout << "Algorithm: Dijkstra's SSSP (Sequential Priority Queue)\n\n";
+
+                    std::cout << "[Running] Sequential Dijkstra from Source Node 0...\n";
+                    auto start_seq = std::chrono::high_resolution_clock::now();
+                    std::vector<float> dist = graph_engine::algorithms::sssp_dijkstra(graph, 0);
+                    auto end_seq = std::chrono::high_resolution_clock::now();
+                    double time_seq = std::chrono::duration<double, std::milli>(end_seq - start_seq).count();
+
+                    std::cout << "\n================ PERFORMANCE REPORT ================\n";
+                    std::cout << std::left << std::setw(20) << "Hardware" << std::setw(20) << "Avg Time (ms)" << "Speedup vs Seq\n";
+                    std::cout << "----------------------------------------------------\n";
+                    std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << time_seq << "1.0x\n";
                     std::cout << "====================================================\n";
 
                 } else {

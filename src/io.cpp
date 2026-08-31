@@ -23,6 +23,7 @@ void save_graph_binary(const CSRGraph& graph, const std::string& filepath) {
     // Write arrays
     std::fwrite(graph.row_offsets.data(), sizeof(edge_id_t), graph.num_vertices + 1, f);
     std::fwrite(graph.column_indices.data(), sizeof(vertex_id_t), graph.num_edges, f);
+    std::fwrite(graph.edge_weights.data(), sizeof(float), graph.num_edges, f);
 
     std::fclose(f);
     std::cout << "[IO] Binary cache saved successfully." << std::endl;
@@ -43,6 +44,8 @@ CSRGraph load_graph_binary(const std::string& filepath) {
     // Allocate RAM
     graph.row_offsets.resize(graph.num_vertices + 1);
     graph.column_indices.resize(graph.num_edges);
+    graph.edge_weights.resize(graph.num_edges);
+    graph.is_weighted = true;
 
     // Read raw bytes straight into RAM (Instantaneous)
     if (std::fread(graph.row_offsets.data(), sizeof(edge_id_t), graph.num_vertices + 1, f) != (graph.num_vertices + 1)) {
@@ -51,6 +54,10 @@ CSRGraph load_graph_binary(const std::string& filepath) {
     
     if (std::fread(graph.column_indices.data(), sizeof(vertex_id_t), graph.num_edges, f) != graph.num_edges) {
         throw std::runtime_error("IO Error reading column_indices");
+    }
+
+    if (std::fread(graph.edge_weights.data(), sizeof(float), graph.num_edges, f) != graph.num_edges) {
+        throw std::runtime_error("IO Error reading edge_weights");
     }
 
     std::fclose(f);
@@ -114,19 +121,32 @@ CSRGraph load_graph(const std::string& filepath) {
     }
 
     graph.column_indices.resize(graph.num_edges);
+    graph.edge_weights.resize(graph.num_edges);
+    graph.is_weighted = true;
     std::vector<edge_id_t> current_offsets(graph.row_offsets.begin(), graph.row_offsets.end());
 
-    std::cout << "Pass 3: Populating edges..." << std::endl;
+    std::cout << "Pass 3: Populating edges and weights..." << std::endl;
     file.clear();
     file.seekg(0, std::ios::beg);
+
+    // simple seeded random for consistent edge weights if dataset lacks them
+    srand(42); 
 
     while (std::getline(file, line)) {
         if (line.empty() || line[0] == '%' || line[0] == '#') continue;
         std::stringstream ss(line);
         vertex_id_t u, v;
+        float w;
         if (ss >> u >> v) {
             edge_id_t pos = current_offsets[u]++;
             graph.column_indices[pos] = v;
+            
+            if (ss >> w) {
+                graph.edge_weights[pos] = w;
+            } else {
+                // Generate random weight between 1.0 and 10.0
+                graph.edge_weights[pos] = 1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 9.0f));
+            }
         }
     }
 
