@@ -32,7 +32,8 @@ def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset fi
         dataset_path = f"data/{dataset}"
         
         # Let's try running it as a native WSL command first, which works inside WSL and from Windows.
-        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --benchmark"'
+        # Use --runs 4 for statistical averaging (1 cold start + 3 hot runs)
+        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --benchmark --runs 4"'
         
         # Run the command and capture output
         result = subprocess.run(

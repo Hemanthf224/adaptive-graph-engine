@@ -30,14 +30,18 @@ int main(int argc, char** argv) {
         
         bool run_benchmark = false;
         bool run_scaling = false;
+        int num_runs = 4; // 1 cold start + 3 hot runs
         std::string filepath = "";
 
         if (argc > 1) {
             filepath = argv[1];
-            if (argc > 2) {
-                std::string arg2 = argv[2];
-                if (arg2 == "--benchmark") run_benchmark = true;
-                if (arg2 == "--scaling") run_scaling = true;
+            for (int i = 2; i < argc; ++i) {
+                std::string arg = argv[i];
+                if (arg == "--benchmark") run_benchmark = true;
+                if (arg == "--scaling") run_scaling = true;
+                if (arg == "--runs" && i + 1 < argc) {
+                    num_runs = std::stoi(argv[++i]);
+                }
             }
             
             std::cout << "Loading graph from: " << filepath << std::endl;
@@ -49,40 +53,58 @@ int main(int argc, char** argv) {
                     std::cout << "           PAGERANK BENCHMARK SUITE STARTED           \n";
                     std::cout << "======================================================\n";
                     std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
-                    std::cout << "Compute-Bound Workload: 20 Iterations of PageRank\n\n";
+                    std::cout << "Compute-Bound Workload: 20 Iterations of PageRank\n";
+                    std::cout << "Statistical Mode: " << num_runs << " runs (first run discarded as cold-start)\n\n";
+
+                    double avg_time_seq = 0.0;
+                    double avg_time_omp = 0.0;
+                    double avg_time_cuda = 0.0;
+                    int valid_runs = (num_runs > 1) ? (num_runs - 1) : 1;
 
                     // 1. Sequential
-                    std::cout << "[Running] Sequential PageRank...\n";
-                    auto start_seq = std::chrono::high_resolution_clock::now();
-                    std::vector<float> pr_seq = graph_engine::algorithms::pagerank_sequential(graph, 20);
-                    auto end_seq = std::chrono::high_resolution_clock::now();
-                    double time_seq = std::chrono::duration<double, std::milli>(end_seq - start_seq).count();
+                    std::cout << "[Running] Sequential PageRank (" << num_runs << " runs)...\n";
+                    for (int r = 0; r < num_runs; ++r) {
+                        auto start_seq = std::chrono::high_resolution_clock::now();
+                        std::vector<float> pr_seq = graph_engine::algorithms::pagerank_sequential(graph, 20);
+                        auto end_seq = std::chrono::high_resolution_clock::now();
+                        double time_seq = std::chrono::duration<double, std::milli>(end_seq - start_seq).count();
+                        if (num_runs == 1 || r > 0) avg_time_seq += time_seq;
+                    }
+                    avg_time_seq /= valid_runs;
 
                     // 2. OpenMP
-                    std::cout << "[Running] OpenMP PageRank (24 Threads)...\n";
-                    auto start_omp = std::chrono::high_resolution_clock::now();
-                    std::vector<float> pr_omp = graph_engine::algorithms::pagerank_openmp(graph, 20);
-                    auto end_omp = std::chrono::high_resolution_clock::now();
-                    double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
+                    std::cout << "[Running] OpenMP PageRank (24 Threads, " << num_runs << " runs)...\n";
+                    for (int r = 0; r < num_runs; ++r) {
+                        auto start_omp = std::chrono::high_resolution_clock::now();
+                        std::vector<float> pr_omp = graph_engine::algorithms::pagerank_openmp(graph, 20);
+                        auto end_omp = std::chrono::high_resolution_clock::now();
+                        double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
+                        if (num_runs == 1 || r > 0) avg_time_omp += time_omp;
+                    }
+                    avg_time_omp /= valid_runs;
 
                     // 3. CUDA
-                    std::cout << "[Running] CUDA PageRank (20 Iterations entirely in VRAM)...\n";
+                    std::cout << "[Running] CUDA PageRank (20 Iterations, " << num_runs << " runs)...\n";
                     
                     // WARM START: Prefetch UVM Memory to the GPU before measuring performance
                     int deviceId = 0;
                     graph_engine::algorithms::prefetch_graph_to_gpu(graph, deviceId);
 
-                    auto start_cuda = std::chrono::high_resolution_clock::now();
-                    std::vector<float> pr_cuda = graph_engine::algorithms::pagerank_cuda(graph, 20);
-                    auto end_cuda = std::chrono::high_resolution_clock::now();
-                    double time_cuda = std::chrono::duration<double, std::milli>(end_cuda - start_cuda).count();
+                    for (int r = 0; r < num_runs; ++r) {
+                        auto start_cuda = std::chrono::high_resolution_clock::now();
+                        std::vector<float> pr_cuda = graph_engine::algorithms::pagerank_cuda(graph, 20);
+                        auto end_cuda = std::chrono::high_resolution_clock::now();
+                        double time_cuda = std::chrono::duration<double, std::milli>(end_cuda - start_cuda).count();
+                        if (num_runs == 1 || r > 0) avg_time_cuda += time_cuda;
+                    }
+                    avg_time_cuda /= valid_runs;
 
                     std::cout << "\n================ PERFORMANCE REPORT ================\n";
-                    std::cout << std::left << std::setw(20) << "Hardware" << std::setw(20) << "Time (ms)" << "Speedup vs Seq\n";
+                    std::cout << std::left << std::setw(20) << "Hardware" << std::setw(20) << "Avg Time (ms)" << "Speedup vs Seq\n";
                     std::cout << "----------------------------------------------------\n";
-                    std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << time_seq << "1.0x\n";
-                    std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << time_omp << (time_seq/time_omp) << "x\n";
-                    std::cout << std::left << std::setw(20) << "GPU CUDA"       << std::setw(20) << time_cuda << (time_seq/time_cuda) << "x\n";
+                    std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << avg_time_seq << "1.0x\n";
+                    std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << avg_time_omp << (avg_time_seq/avg_time_omp) << "x\n";
+                    std::cout << std::left << std::setw(20) << "GPU CUDA"       << std::setw(20) << avg_time_cuda << (avg_time_seq/avg_time_cuda) << "x\n";
                     std::cout << "====================================================\n";
 
                 } else if (run_scaling) {
