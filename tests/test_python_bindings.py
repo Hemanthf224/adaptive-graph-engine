@@ -53,7 +53,21 @@ def main():
     print(f"Matched Vertices: {result.matched_vertices}")
     print(f"Query executed in {result.execution_time_ms} ms")
 
-    print("\n[SUCCESS] Python bindings and Cypher Engine are fully operational!")
+    # 6. Graph Neural Network (GCN) Inference
+    print("\n[6] Running AVX2-Accelerated GCN Forward Pass...")
+    
+    # Initialize some dummy features for 4 vertices
+    # If the tiny graph has more vertices, we just pad them
+    node_features = [1.0, 0.5, -0.2, 0.8] 
+    while len(node_features) < graph.num_vertices:
+        node_features.append(0.1)
+        
+    layer_weight = 0.5
+    
+    next_features = age.gcn_forward_pass(graph, node_features, layer_weight)
+    print(f"GCN Output Features (Top 5): {next_features[:5]}")
+
+    print("\n[SUCCESS] Python bindings and AI Engine are fully operational!")
 
 if __name__ == "__main__":
     main()

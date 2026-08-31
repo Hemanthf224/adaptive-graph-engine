@@ -80,6 +80,7 @@ pybind11_add_module(adaptive_graph
     src/connected_components.cpp
     src/sssp.cpp
     src/query_parser.cpp
+    src/gnn_layer.cpp
 )
 
 # Link requirements for Python Module
