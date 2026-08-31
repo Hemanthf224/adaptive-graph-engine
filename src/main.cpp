@@ -25,8 +25,47 @@ int main(int argc, char** argv) {
     // Print environment details
     graph_engine::core::print_environment_info(mpi_rank, mpi_size);
 
-    if (mpi_rank == 0) {
-        std::cout << "Starting Adaptive Graph Engine...\n" << std::endl;
+    if (mpi_size > 1) {
+        // ==========================================
+        // MPI CLUSTER MODE
+        // ==========================================
+        if (argc > 1) {
+            std::string filepath = argv[1];
+            if (mpi_rank == 0) {
+                std::cout << "\n======================================================\n";
+                std::cout << "           MPI CLUSTER MODE INITIALIZED               \n";
+                std::cout << "======================================================\n";
+            }
+            
+            try {
+                // Every node loads the graph (in a real system, we'd use parallel I/O, but this works for demo)
+                graph_engine::core::CSRGraph graph = graph_engine::core::load_graph(filepath);
+                
+                // Synchronize before starting the timer
+                MPI_Barrier(MPI_COMM_WORLD);
+                auto start = std::chrono::high_resolution_clock::now();
+                
+                std::vector<float> pr_mpi = graph_engine::algorithms::pagerank_mpi(graph, 20);
+                
+                auto end = std::chrono::high_resolution_clock::now();
+                double time_mpi = std::chrono::duration<double, std::milli>(end - start).count();
+
+                if (mpi_rank == 0) {
+                    std::cout << "[SUCCESS] MPI Distributed PageRank completed in " << time_mpi << " ms\n";
+                }
+            } catch (const std::exception& e) {
+                if (mpi_rank == 0) std::cerr << "Error: " << e.what() << std::endl;
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
+        } else {
+            if (mpi_rank == 0) std::cout << "Please provide a dataset path." << std::endl;
+        }
+
+    } else if (mpi_rank == 0) {
+        // ==========================================
+        // SINGLE-NODE MODE
+        // ==========================================
+        std::cout << "Starting Adaptive Graph Engine (Single Node)...\n" << std::endl;
         
         bool run_benchmark = false;
         bool run_scaling = false;
