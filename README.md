@@ -19,12 +19,12 @@ The Adaptive Graph Engine (AGE) is a C++20 monolithic framework designed to exec
 * **Memory Management:** Custom Cache-Aware Arena Allocators ensuring zero-overhead contiguous memory allocation and optimal cache locality.
 * **Streaming Algorithms:** Sub-linear space data structures including HyperLogLog for O(log log N) cardinality estimation and Count-Min Sketch for edge frequency tracking.
 
-### 2. Artificial Intelligence & Neuromorphic Computing
+### 2. Artificial Intelligence and Neuromorphic Computing
 * **Graph Convolutional Networks (GCN):** Native forward-pass inference for geometric deep learning over graph structures.
 * **Federated Learning:** FedAvg implementation for distributed, privacy-preserving model parameter aggregation across decentralized graph shards.
 * **Spiking Neural Networks (SNN):** Neuromorphic emulation utilizing Leaky Integrate-and-Fire (LIF) neurons, modeling discrete time-step spike propagation and temporal synaptic dynamics.
 
-### 3. Cryptography & Privacy-Preserving Analytics
+### 3. Cryptography and Privacy-Preserving Analytics
 * **Fully Homomorphic Encryption (FHE):** Ciphertext-based execution of graph algorithms (e.g., PageRank), ensuring server-side data remains encrypted during computation.
 * **Zero-Knowledge Proofs (ZKP):** Implementation of the non-interactive Fiat-Shamir heuristic to cryptographically verify computational integrity without disclosing underlying vertex parameters.
 * **Differential Privacy (DP):** Laplace and Gaussian noise mechanisms achieving strict (ε, δ)-DP bounds, calculated via L1 global sensitivity metrics for graph analytics.
@@ -33,9 +33,9 @@ The Adaptive Graph Engine (AGE) is a C++20 monolithic framework designed to exec
 * **Aerospace Fault Tolerance (TMR):** Triple Modular Redundancy architecture designed for high-radiation environments. Implements parallel execution and bitwise majority voting to detect and correct Single Event Upsets (SEUs).
 * **Quantum Computing Simulation:** Software emulation of Grover's Algorithm utilizing amplitude amplification to achieve O(√N) unstructured search complexity over graph states.
 
-### 5. Infrastructure & Frontend Integration
+### 5. Infrastructure and Frontend Integration
 * **Infrastructure as Code (IaC):** Terraform configuration and Kubernetes (EKS) manifests for automated, scalable cloud provisioning.
-* **CI/CD & Containerization:** Dockerized runtimes with GitHub Actions workflows for continuous integration and automated testing.
+* **CI/CD and Containerization:** Dockerized runtimes with GitHub Actions workflows for continuous integration and automated testing.
 * **Frontend Architecture:** React Single Page Application (SPA) utilizing WebAssembly (Wasm) for client-side execution, WebSockets for real-time bidirectional telemetry, and WebGL for 3D topology visualization.
 * **Query Parser:** Custom Cypher-compliant parser and stack-based Bytecode Virtual Machine for declarative graph querying.
 
@@ -75,7 +75,7 @@ print(f"Total Network Spikes: {snn_result.total_network_spikes}")
 - C++20 Compliant Compiler (GCC, Clang, MSVC)
 - CUDA Toolkit (Optional: Required for GPU acceleration targets)
 - OpenMPI (Optional: Required for distributed cluster targets)
-- Python 3.8+ & PyBind11 (Required for Python module compilation)
+- Python 3.8+ and PyBind11 (Required for Python module compilation)
 
 ### Core Engine Compilation
 ```bash
