@@ -10,6 +10,7 @@
 #include "core/query_parser.hpp"
 #include "algorithms/gnn_layer.hpp"
 #include "algorithms/quantum_simulator.hpp"
+#include "algorithms/fhe_simulator.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -72,4 +73,8 @@ PYBIND11_MODULE(adaptive_graph, m) {
           
     m.def("quantum_grover_search", &algorithms::QuantumSimulator::grover_search, "Simulate Quantum Grover Search for a vertex",
           py::arg("graph"), py::arg("target_vertex"), py::arg("iterations") = 1);
+
+    m.def("encrypted_pagerank", &algorithms::FHESimulator::encrypted_pagerank,
+          "Run PageRank on fully homomorphically encrypted graph data (Privacy-Preserving Analytics)",
+          py::arg("graph"), py::arg("iterations") = 10, py::arg("damping") = 0.85f);
 }

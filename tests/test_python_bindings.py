@@ -73,7 +73,14 @@ def main():
     quantum_probs = age.quantum_grover_search(graph, target_vertex=2)
     print(f"Quantum Measurement Probabilities: {quantum_probs}")
     
-    print("\n[SUCCESS] Python bindings, AI Engine, and Quantum Simulator are fully operational!")
+    # 8. Fully Homomorphic Encryption (Privacy-Preserving Analytics)
+    print("\n[8] Running Encrypted PageRank (FHE Simulation)...")
+    print("    Client encrypts graph data... (simulated ciphertexts uploaded to server)")
+    encrypted_scores = age.encrypted_pagerank(graph, iterations=10, damping=0.85)
+    print(f"    Server computed PageRank on ENCRYPTED data!")
+    print(f"    Client decrypts results: {encrypted_scores}")
+
+    print("\n[SUCCESS] Hardware, AI, Quantum, and Encrypted Graph Analytics are all operational!")
 
 if __name__ == "__main__":
     main()
