@@ -107,7 +107,20 @@ def main():
     print(f"     Global Loss after FL: {fed_model.global_loss:.6f}")
     print(f"     (Raw data never left any node - only gradients were shared!)")
 
-    print("\n[SUCCESS] Complete AI, Privacy, and Federated Stack is fully operational!")
+    # 12. Streaming Sketching (HyperLogLog + Count-Min Sketch)
+    print("\n[12] Running Streaming Sketching Algorithms...")
+    
+    # HyperLogLog: estimate distinct neighbors per vertex
+    est_degrees = age.estimate_degrees(graph, precision=10)
+    print(f"     HyperLogLog Estimated Degrees (Top 5): {[round(d,1) for d in est_degrees[:5]]}")
+    
+    # Count-Min Sketch: build edge frequency sketch
+    edge_sketch = age.build_edge_sketch(graph)
+    freq_0_1 = age.query_edge_freq(edge_sketch, 0, 1)
+    print(f"     Count-Min Sketch: Edge (0->1) frequency estimate = {freq_0_1}")
+    print(f"     (Both use sub-linear O(log log N) and O(1/eps) space!)")
+
+    print("\n[SUCCESS] Full engine with Streaming Sketching is operational!")
 
 if __name__ == "__main__":
     main()

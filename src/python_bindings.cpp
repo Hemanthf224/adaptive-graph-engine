@@ -14,6 +14,7 @@
 #include "algorithms/zkp_verifier.hpp"
 #include "algorithms/differential_privacy.hpp"
 #include "algorithms/federated_learning.hpp"
+#include "algorithms/sketching.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -132,4 +133,22 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("federated_train", &algorithms::FederatedLearning::train,
           "Train a GCN using Federated Learning (FedAvg) across distributed graph shards",
           py::arg("graph"), py::arg("num_nodes") = 4, py::arg("num_rounds") = 10);
+
+    // Sketching Bindings
+    py::class_<algorithms::CountMinSketch>(m, "CountMinSketch")
+        .def(py::init<int, int>(), py::arg("width") = 2048, py::arg("depth") = 5)
+        .def("update", &algorithms::CountMinSketch::update, py::arg("item"), py::arg("count") = 1)
+        .def("query", &algorithms::CountMinSketch::query, py::arg("item"));
+
+    m.def("estimate_degrees", &algorithms::GraphSketcher::estimate_degrees,
+          "Estimate vertex degrees using HyperLogLog (O(log log N) space)",
+          py::arg("graph"), py::arg("precision") = 10);
+
+    m.def("build_edge_sketch", &algorithms::GraphSketcher::build_edge_frequency_sketch,
+          "Build a Count-Min Sketch of edge frequencies",
+          py::arg("graph"));
+
+    m.def("query_edge_freq", &algorithms::GraphSketcher::query_edge_frequency,
+          "Query estimated frequency of edge (u,v) from a Count-Min Sketch",
+          py::arg("sketch"), py::arg("u"), py::arg("v"));
 }
