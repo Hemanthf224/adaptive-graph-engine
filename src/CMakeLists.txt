@@ -1,5 +1,5 @@
 # Create a core graph library
-add_library(graph_core STATIC graph.cpp io.cpp scheduler.cpp)
+add_library(graph_core STATIC graph.cpp io.cpp scheduler.cpp query_parser.cpp)
 target_link_libraries(graph_core PUBLIC OpenMP::OpenMP_CXX MPI::MPI_CXX CUDA::cudart)
 target_include_directories(graph_core PUBLIC ${CMAKE_SOURCE_DIR}/include)
 

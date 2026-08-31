@@ -79,6 +79,7 @@ pybind11_add_module(adaptive_graph
     src/bfs.cpp
     src/connected_components.cpp
     src/sssp.cpp
+    src/query_parser.cpp
 )
 
 # Link requirements for Python Module

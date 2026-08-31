@@ -6,6 +6,8 @@
 #include "algorithms/bfs.hpp"
 #include "algorithms/connected_components.hpp"
 #include "algorithms/sssp.hpp"
+#include "core/property_graph.hpp"
+#include "core/query_parser.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -25,6 +27,26 @@ PYBIND11_MODULE(adaptive_graph, m) {
              [](const core::CSRGraph &g) {
                  return "<adaptive_graph.CSRGraph with " + std::to_string(g.num_vertices) + " vertices and " + std::to_string(g.num_edges) + " edges>";
              });
+
+    // Bind PropertyGraph
+    py::class_<core::PropertyGraph, core::CSRGraph>(m, "PropertyGraph")
+        .def(py::init<>())
+        .def(py::init<const core::CSRGraph&>())
+        .def("set_vertex_property", &core::PropertyGraph::set_vertex_property)
+        .def("get_vertex_property", &core::PropertyGraph::get_vertex_property)
+        .def("__repr__",
+             [](const core::PropertyGraph &g) {
+                 return "<adaptive_graph.PropertyGraph with " + std::to_string(g.num_vertices) + " vertices>";
+             });
+
+    // Bind QueryResult
+    py::class_<core::QueryResult>(m, "QueryResult")
+        .def_readwrite("matched_vertices", &core::QueryResult::matched_vertices)
+        .def_readwrite("execution_time_ms", &core::QueryResult::execution_time_ms);
+
+    // Bind CypherParser
+    m.def("execute_cypher", &core::CypherParser::execute_query, "Execute a basic Cypher query on a PropertyGraph",
+          py::arg("graph"), py::arg("query"));
 
     // Bind IO functions
     m.def("load_graph", &core::load_graph, "Load a graph from an edge list file", py::arg("filepath"));

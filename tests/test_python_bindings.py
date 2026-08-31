@@ -36,7 +36,24 @@ def main():
     components = age.connected_components(graph)
     print(f"Component Labels (Top 5): {components[:5]}")
 
-    print("\n[SUCCESS] Python bindings are fully operational!")
+    # 5. Property Graph and Cypher Queries
+    print("\n[5] Upgrading to Property Graph Database...")
+    prop_graph = age.PropertyGraph(graph)
+    prop_graph.set_vertex_property(0, "name", "Alice")
+    prop_graph.set_vertex_property(0, "age", "25")
+    
+    prop_graph.set_vertex_property(1, "name", "Bob")
+    prop_graph.set_vertex_property(1, "age", "19")
+
+    prop_graph.set_vertex_property(2, "name", "Charlie")
+    prop_graph.set_vertex_property(2, "age", "30")
+
+    print("Executing Cypher Query: MATCH (n) WHERE n.age > 20 RETURN n")
+    result = age.execute_cypher(prop_graph, "MATCH (n) WHERE n.age > 20 RETURN n")
+    print(f"Matched Vertices: {result.matched_vertices}")
+    print(f"Query executed in {result.execution_time_ms} ms")
+
+    print("\n[SUCCESS] Python bindings and Cypher Engine are fully operational!")
 
 if __name__ == "__main__":
     main()
