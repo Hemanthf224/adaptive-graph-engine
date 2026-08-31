@@ -1,40 +1,45 @@
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <pybind11/stl.h> // For automatic std::vector <-> python list conversion
 #include "core/graph.hpp"
 #include "core/io.hpp"
-#include "algorithms/page_rank_cuda.cuh"
-#include "algorithms/bfs_cuda.cuh"
-#include <omp.h>
-#include <mpi.h>
+#include "algorithms/page_rank.hpp"
+#include "algorithms/bfs.hpp"
+#include "algorithms/connected_components.hpp"
+#include "algorithms/sssp.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
 
-// Need a simple struct wrapper or just use the CSRGraph directly
-// Since uvm_vector inherits/is std::vector, pybind11::stl can handle it
-// BUT copying back and forth between Python Lists and uvm_vector might be slow.
-// For now, we will let Pybind11 do the standard stl conversions.
-
 PYBIND11_MODULE(adaptive_graph, m) {
-    m.doc() = "Adaptive GPU-Accelerated Graph Processing Engine Python API";
+    m.doc() = "Adaptive Graph Engine - High Performance C++ Graph Analytics for Python";
 
-    // Expose the CSRGraph struct
+    // Bind CSRGraph struct
     py::class_<core::CSRGraph>(m, "CSRGraph")
         .def(py::init<>())
         .def_readwrite("num_vertices", &core::CSRGraph::num_vertices)
         .def_readwrite("num_edges", &core::CSRGraph::num_edges)
-        .def("print", &core::CSRGraph::print, "Print graph stats");
+        .def_readwrite("row_offsets", &core::CSRGraph::row_offsets)
+        .def_readwrite("column_indices", &core::CSRGraph::column_indices)
+        .def_readwrite("weights", &core::CSRGraph::weights)
+        .def("__repr__",
+             [](const core::CSRGraph &g) {
+                 return "<adaptive_graph.CSRGraph with " + std::to_string(g.num_vertices) + " vertices and " + std::to_string(g.num_edges) + " edges>";
+             });
 
-    // Expose IO
-    m.def("load", &core::load_graph, "Load a graph from a Matrix Market or Edgelist file",
-          py::arg("filepath"));
+    // Bind IO functions
+    m.def("load_graph", &core::load_graph, "Load a graph from an edge list file", py::arg("filepath"));
+    m.def("create_tiny_test_graph", &core::create_tiny_test_graph, "Create a tiny test graph for testing");
 
-    // Expose CUDA Algorithms
-    m.def("pagerank_cuda", &algorithms::pagerank_cuda, 
-          "Run PageRank on the GPU using Zero-Copy UVM",
+    // Bind Algorithms
+    m.def("pagerank", &algorithms::pagerank_openmp, "Run PageRank (OpenMP)", 
           py::arg("graph"), py::arg("iterations") = 20, py::arg("damping") = 0.85f);
           
-    m.def("bfs_cuda", &algorithms::bfs_cuda, 
-          "Run BFS on the GPU using Zero-Copy UVM",
-          py::arg("graph"), py::arg("source") = 0);
+    m.def("bfs", &algorithms::bfs_direction_optimizing, "Run Direction-Optimizing BFS (Graph500 Standard)",
+          py::arg("graph"), py::arg("source_vertex"));
+          
+    m.def("connected_components", &algorithms::connected_components_openmp, "Find Connected Components (Label Propagation)",
+          py::arg("graph"));
+          
+    m.def("sssp", &algorithms::sssp_dijkstra, "Run Single-Source Shortest Path (Dijkstra)",
+          py::arg("graph"), py::arg("source_vertex"));
 }

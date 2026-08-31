@@ -57,3 +57,31 @@ enable_testing()
 # Add subdirectories
 add_subdirectory(src)
 add_subdirectory(tests)
+
+# ---------------------------------------------------------
+# PyBind11 Native Python Interface
+# ---------------------------------------------------------
+# Fetch pybind11
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG        v2.11.1
+)
+FetchContent_MakeAvailable(pybind11)
+
+# Ensure Python3 headers are found
+find_package(Python3 COMPONENTS Development.Module REQUIRED)
+
+pybind11_add_module(adaptive_graph
+    src/python_bindings.cpp
+    src/io.cpp
+    src/page_rank.cpp
+    src/bfs.cpp
+    src/connected_components.cpp
+    src/sssp.cpp
+)
+
+# Link requirements for Python Module
+target_link_libraries(adaptive_graph PRIVATE OpenMP::OpenMP_CXX)
+target_include_directories(adaptive_graph PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
