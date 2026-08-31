@@ -79,7 +79,8 @@ print(f"Total Network Spikes: {snn_result.total_network_spikes}")
 
 ### Core Engine Compilation
 ```bash
-mkdir build && cd build
+mkdir build
+cd build
 cmake ..
 make -j8
 ```
