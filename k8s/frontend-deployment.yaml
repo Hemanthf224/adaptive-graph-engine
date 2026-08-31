@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graph-engine-frontend
+  labels:
+    app: graph-frontend
+spec:
+  replicas: 5 # Scale up to handle massive web traffic to the dashboard
+  selector:
+    matchLabels:
+      app: graph-frontend
+  template:
+    metadata:
+      labels:
+        app: graph-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-docker-registry/adaptive-graph-engine-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: graph-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

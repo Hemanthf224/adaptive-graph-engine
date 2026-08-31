@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graph-engine-backend
+  labels:
+    app: graph-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: graph-backend
+  template:
+    metadata:
+      labels:
+        app: graph-backend
+    spec:
+      # Ensure this runs on our massive c6i.24xlarge HPC nodes
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "hpc"
+        effect: "NoSchedule"
+      containers:
+      - name: backend
+        image: your-docker-registry/adaptive-graph-engine-backend:latest
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: "32Gi"
+            cpu: "16"
+          limits:
+            memory: "128Gi"
+            cpu: "96"
+        env:
+        - name: ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: graph-backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
