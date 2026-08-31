@@ -114,3 +114,42 @@ def explain_scheduler(dataset: str = Query("amazon0302.txt")):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/scaling")
+def run_scaling_analysis(dataset: str = Query("amazon0302.txt")):
+    try:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
+        dataset_path = f"data/{dataset}"
+        
+        # Run with --scaling
+        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --scaling"'
+        
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        output = result.stdout + result.stderr
+        
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"C++ Engine Failed: {output}")
+
+        # Parse scaling results
+        # [SCALING_RESULT] Threads: 1 | Time: 109.834 ms
+        scaling_data = []
+        for match in re.finditer(r"\[SCALING_RESULT\] Threads:\s+(\d+)\s+\|\s+Time:\s+([0-9.]+)\s+ms", output):
+            scaling_data.append({
+                "threads": int(match.group(1)),
+                "time": float(match.group(2))
+            })
+
+        if not scaling_data:
+            raise HTTPException(status_code=500, detail=f"Failed to parse scaling output: {output}")
+
+        return {
+            "success": True,
+            "dataset": dataset,
+            "scaling": scaling_data,
+            "raw_output": output
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+

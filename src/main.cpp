@@ -1,5 +1,6 @@
 #include <iostream>
 #include <mpi.h>
+#include <omp.h>
 #include <chrono>
 #include <cuda_runtime.h>
 #include "core/types.hpp"
@@ -28,12 +29,15 @@ int main(int argc, char** argv) {
         std::cout << "Starting Adaptive Graph Engine...\n" << std::endl;
         
         bool run_benchmark = false;
+        bool run_scaling = false;
         std::string filepath = "";
 
         if (argc > 1) {
             filepath = argv[1];
-            if (argc > 2 && std::string(argv[2]) == "--benchmark") {
-                run_benchmark = true;
+            if (argc > 2) {
+                std::string arg2 = argv[2];
+                if (arg2 == "--benchmark") run_benchmark = true;
+                if (arg2 == "--scaling") run_scaling = true;
             }
             
             std::cout << "Loading graph from: " << filepath << std::endl;
@@ -80,6 +84,26 @@ int main(int argc, char** argv) {
                     std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << time_omp << (time_seq/time_omp) << "x\n";
                     std::cout << std::left << std::setw(20) << "GPU CUDA"       << std::setw(20) << time_cuda << (time_seq/time_cuda) << "x\n";
                     std::cout << "====================================================\n";
+
+                } else if (run_scaling) {
+                    std::cout << "\n======================================================\n";
+                    std::cout << "           OPENMP STRONG SCALING ANALYSIS             \n";
+                    std::cout << "======================================================\n";
+                    std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
+                    std::cout << "Compute-Bound Workload: 20 Iterations of PageRank\n\n";
+
+                    std::vector<int> thread_counts = {1, 2, 4, 8, 16, 24};
+                    for (int threads : thread_counts) {
+                        omp_set_num_threads(threads);
+                        std::cout << "[Running] OpenMP PageRank (" << threads << " Threads)...\n";
+                        
+                        auto start_omp = std::chrono::high_resolution_clock::now();
+                        std::vector<float> pr_omp = graph_engine::algorithms::pagerank_openmp(graph, 20);
+                        auto end_omp = std::chrono::high_resolution_clock::now();
+                        
+                        double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
+                        std::cout << "[SCALING_RESULT] Threads: " << threads << " | Time: " << time_omp << " ms\n";
+                    }
 
                 } else {
                     std::cout << "\n--- Adaptive Engine Execution ---\n";

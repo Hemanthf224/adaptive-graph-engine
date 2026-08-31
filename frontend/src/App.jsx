@@ -22,9 +22,11 @@ function App() {
   // VRAM state
   const [activeBlocks, setActiveBlocks] = useState(0)
 
-  // Scheduler Telemetry State
+  // Telemetry States
   const [schedulerData, setSchedulerData] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [scalingData, setScalingData] = useState([])
+  const [scalingLoading, setScalingLoading] = useState(false)
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -43,7 +45,6 @@ function App() {
     setLogs(["[SYSTEM] Connecting to Explainable AI Scheduler..."])
     
     try {
-      // Analyze the LiveJournal dataset to show off the memory contention logic!
       const ds = datasets[2] // LiveJournal
       appendLog(`[SCHEDULER] Analyzing Topology: ${ds.file}...`)
       
@@ -63,6 +64,42 @@ function App() {
       appendLog(`[ERROR] ${err.message}`)
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const runScalingAnalysis = async () => {
+    setScalingLoading(true)
+    setError(null)
+    setScalingData([])
+    setLogs(["[SYSTEM] Initiating OpenMP Strong Scaling Analysis (Amdahl's Law)..."])
+    
+    try {
+      const ds = datasets[0] // Amazon (fast to run 6 times)
+      appendLog(`[SCALING] Executing multi-threaded benchmarks on ${ds.file}...`)
+      
+      const response = await fetch(`http://localhost:8000/api/scaling?dataset=${ds.file}`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch scaling telemetry")
+      }
+      
+      const data = await response.json()
+      
+      // Format data for Recharts (x=threads, y=time)
+      const formattedData = data.scaling.map(s => ({
+        threads: `${s.threads} Cores`,
+        Time: s.time
+      }))
+      
+      setScalingData(formattedData)
+      
+      appendLog(`[SCALING] Thread scaling analysis complete.`)
+      appendLog(`[STDOUT]\n${data.raw_output}`)
+      
+    } catch (err) {
+      setError(err.message)
+      appendLog(`[ERROR] ${err.message}`)
+    } finally {
+      setScalingLoading(false)
     }
   }
 
@@ -136,15 +173,23 @@ function App() {
         <button 
           className="run-btn" 
           onClick={runTopologyAnalysis} 
-          disabled={loading || analyzing}
+          disabled={loading || analyzing || scalingLoading}
         >
           {analyzing ? '[██████░░░░] ANALYZING...' : '>_ ANALYZE_TOPOLOGY'}
         </button>
 
         <button 
           className="run-btn" 
+          onClick={runScalingAnalysis} 
+          disabled={loading || analyzing || scalingLoading}
+        >
+          {scalingLoading ? '[██████░░░░] SCALING...' : '>_ AMDAHL_STRONG_SCALING'}
+        </button>
+
+        <button 
+          className="run-btn" 
           onClick={runBenchmarkAll} 
-          disabled={loading || analyzing}
+          disabled={loading || analyzing || scalingLoading}
         >
           {loading ? (
             <>
@@ -184,8 +229,30 @@ function App() {
 
       <div className="grid-layout">
         <div className="panel" style={{ padding: '20px' }}>
+          <div className="panel-title">OPENMP_STRONG_SCALING (AMDAHL'S LAW)</div>
+          <div style={{ width: '100%', height: '250px' }}>
+            {scalingData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={scalingData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                  <XAxis dataKey="threads" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" label={{ value: 'Time (ms)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0A0A0A', border: '1px solid #0071c5', borderRadius: '0' }} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line type="monotone" dataKey="Time" stroke="#0071c5" strokeWidth={3} dot={{ r: 5, fill: '#0A0A0A' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
+                AWAITING_SCALING_DATA...
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="panel" style={{ padding: '20px' }}>
           <div className="panel-title">EXECUTION_TIME_VS_GRAPH_SIZE</div>
-          <div style={{ width: '100%', height: '350px' }}>
+          <div style={{ width: '100%', height: '250px' }}>
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -201,14 +268,16 @@ function App() {
               </ResponsiveContainer>
             ) : (
               <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
-                AWAITING_DATA...
+                AWAITING_BENCHMARK_DATA...
               </div>
             )}
           </div>
         </div>
+      </div>
 
+      <div className="grid-layout" style={{ gridTemplateColumns: '1fr 3fr' }}>
         <div className="panel">
-          <div className="panel-title">UVM_VRAM_ALLOCATION (8GB)</div>
+          <div className="panel-title">UVM_VRAM_ALLOCATION</div>
           <div className="vram-grid">
             {renderVRAMMap()}
           </div>
@@ -218,17 +287,17 @@ function App() {
             Zero-Copy Mode: ENABLED
           </div>
         </div>
-      </div>
-
-      <div className="panel" style={{ marginTop: '20px' }}>
-        <div className="panel-title">STDOUT_TERMINAL</div>
-        <div className="terminal" ref={terminalRef}>
-          {logs.map((log, idx) => (
-            <div key={idx} className="terminal-line">
-              <span className="terminal-prefix">root@hpc:~$</span>
-              <span style={{ whiteSpace: 'pre-wrap' }}>{log}</span>
-            </div>
-          ))}
+        
+        <div className="panel">
+          <div className="panel-title">STDOUT_TERMINAL</div>
+          <div className="terminal" ref={terminalRef}>
+            {logs.map((log, idx) => (
+              <div key={idx} className="terminal-line">
+                <span className="terminal-prefix">root@hpc:~$</span>
+                <span style={{ whiteSpace: 'pre-wrap' }}>{log}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
