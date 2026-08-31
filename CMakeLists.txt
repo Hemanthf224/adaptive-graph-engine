@@ -88,6 +88,7 @@ pybind11_add_module(adaptive_graph
     src/federated_learning.cpp
     src/sketching.cpp
     src/aerospace_tmr.cpp
+    src/neuromorphic.cpp
 )
 
 # Link requirements for Python Module

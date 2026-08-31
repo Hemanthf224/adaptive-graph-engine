@@ -16,6 +16,7 @@
 #include "algorithms/federated_learning.hpp"
 #include "algorithms/sketching.hpp"
 #include "algorithms/aerospace_tmr.hpp"
+#include "algorithms/neuromorphic.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -161,4 +162,14 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("tmr_pagerank", &algorithms::AerospaceTMR::tmr_pagerank,
           "Run Radiation-Hardened PageRank using Triple Modular Redundancy (TMR)",
           py::arg("graph"), py::arg("iterations") = 20, py::arg("damping") = 0.85f, py::arg("simulate_cosmic_ray") = false);
+
+    // Neuromorphic Computing Bindings
+    py::class_<algorithms::SNNResult>(m, "SNNResult")
+        .def_readwrite("total_spikes", &algorithms::SNNResult::total_spikes)
+        .def_readwrite("total_network_spikes", &algorithms::SNNResult::total_network_spikes);
+
+    m.def("simulate_lif_network", &algorithms::NeuromorphicEngine::simulate_lif_network,
+          "Simulate a Spiking Graph Neural Network with Leaky Integrate-and-Fire neurons",
+          py::arg("graph"), py::arg("time_steps") = 100, py::arg("input_current") = 0.5f,
+          py::arg("threshold") = 1.0f, py::arg("leak_rate") = 0.9f, py::arg("synaptic_weight") = 0.2f);
 }

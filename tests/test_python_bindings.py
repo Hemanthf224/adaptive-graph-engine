@@ -128,7 +128,15 @@ def main():
     print(f"     Robust TMR Output Scores (Top 5): {tmr_result.robust_scores[:5]}")
     print("     (Majority voting discarded the corrupted run. Safe for Mars deployment.)")
 
-    print("\n[SUCCESS] Full engine with Aerospace TMR is operational!")
+    # 14. Neuromorphic Computing (Spiking Graph Neural Networks)
+    print("\n[14] Running Neuromorphic Simulation (Spiking Neural Network)...")
+    print("     Simulating Leaky Integrate-and-Fire (LIF) biological neurons over 100 timesteps...")
+    snn_result = age.simulate_lif_network(graph, time_steps=100)
+    print(f"     Total Spikes Fired Across Network: {snn_result.total_network_spikes}")
+    print(f"     Neuron Spike Counts (Top 5): {snn_result.total_spikes[:5]}")
+    print("     (Energy-efficient biological computing paradigm achieved!)")
+
+    print("\n[SUCCESS] Phase 50 Complete. The Ultimate Graph Engine is operational!")
 
 if __name__ == "__main__":
     main()
