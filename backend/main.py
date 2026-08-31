@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import subprocess
 import re
@@ -20,16 +20,19 @@ def read_root():
     return {"status": "Adaptive Graph Engine Backend is Running"}
 
 @app.get("/api/benchmark")
-def run_benchmark():
+def run_benchmark(dataset: str = Query("amazon0302.txt", description="Dataset file name inside data/ directory")):
     try:
         # Determine the absolute path to the project root assuming backend is in project_root/backend
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
-        # We execute the graph engine inside WSL. 
         # Convert Windows path (e.g. C:\all projects\...) to WSL path (/mnt/c/all projects/...)
         wsl_path = project_root.replace('\\', '/').replace('C:', '/mnt/c').replace('c:', '/mnt/c')
         
-        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine data/amazon0302.txt --benchmark"'
+        # Build the path to the dataset
+        dataset_path = f"data/{dataset}"
+        
+        # Let's try running it as a native WSL command first, which works inside WSL and from Windows.
+        cmd = f'wsl -d Ubuntu -- bash -c "cd \'{wsl_path}\' && ./build/src/graph_engine \'{dataset_path}\' --benchmark"'
         
         # Run the command and capture output
         result = subprocess.run(
@@ -45,19 +48,22 @@ def run_benchmark():
             raise HTTPException(status_code=500, detail=f"C++ Engine Failed: {output}")
 
         # Parse the execution times from the output using Regex
-        # Looking for lines like: "CPU Sequential      16.1201             1.0x"
         seq_match = re.search(r"CPU Sequential\s+([0-9.]+)", output)
         omp_match = re.search(r"CPU OpenMP\s+([0-9.]+)", output)
         cuda_match = re.search(r"GPU CUDA\s+([0-9.]+)", output)
+        
+        # Parse graph metadata
+        v_match = re.search(r"V=([0-9]+)", output)
+        e_match = re.search(r"E=([0-9]+)", output)
 
-        if not (seq_match and omp_match and cuda_match):
+        if not (seq_match and omp_match and cuda_match and v_match and e_match):
             raise HTTPException(status_code=500, detail=f"Failed to parse engine output: {output}")
 
         return {
             "success": True,
-            "dataset": "Amazon Product Co-purchasing Network",
-            "vertices": 262111,
-            "edges": 1234877,
+            "dataset": dataset,
+            "vertices": int(v_match.group(1)),
+            "edges": int(e_match.group(1)),
             "results": {
                 "sequential": float(seq_match.group(1)),
                 "openmp": float(omp_match.group(1)),

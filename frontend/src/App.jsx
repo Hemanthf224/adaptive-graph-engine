@@ -1,89 +1,180 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+
+const datasets = [
+  { file: 'amazon0302.txt', name: 'Amazon', edges: 1234877 },
+  { file: 'web-Google.txt', name: 'Google', edges: 5105039 },
+  { file: 'soc-LiveJournal1.txt', name: 'LiveJournal', edges: 68993773 },
+  { file: 'com-orkut.ungraph.txt', name: 'Orkut', edges: 117185083 }
+]
+
+const TOTAL_VRAM_BYTES = 8 * 1024 * 1024 * 1024; // 8GB for RTX 5060
 
 function App() {
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState(null)
+  const [statusText, setStatusText] = useState('')
+  const [chartData, setChartData] = useState([])
   const [error, setError] = useState(null)
+  
+  // Terminal state
+  const [logs, setLogs] = useState(["[SYSTEM] Adaptive Graph Engine Initialized", "[SYSTEM] Waiting for execution command..."])
+  const terminalRef = useRef(null)
 
-  const runBenchmark = async () => {
+  // VRAM state (calculate how many of the 256 blocks are active)
+  const [activeBlocks, setActiveBlocks] = useState(0)
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight
+    }
+  }, [logs])
+
+  const appendLog = (msg) => {
+    setLogs(prev => [...prev, msg])
+  }
+
+  const runBenchmarkAll = async () => {
     setLoading(true)
     setError(null)
+    setChartData([])
+    setActiveBlocks(0)
+    setLogs(["[SYSTEM] Commencing Large-Scale Benchmark Sequence..."])
+    
+    const newChartData = []
+
     try {
-      const response = await fetch('http://localhost:8000/api/benchmark')
-      if (!response.ok) {
-        throw new Error('Failed to fetch from backend')
+      for (const ds of datasets) {
+        setStatusText(`[RUNNING] ${ds.file}`)
+        appendLog(`[EXEC] Requesting ${ds.file} via Python Subprocess...`)
+        
+        // Calculate theoretical VRAM usage for the UI (Edges * 4 bytes roughly)
+        const bytesUsed = ds.edges * 4
+        const percentage = bytesUsed / TOTAL_VRAM_BYTES
+        const blocks = Math.ceil(percentage * 256)
+        setActiveBlocks(blocks)
+
+        const response = await fetch(`http://localhost:8000/api/benchmark?dataset=${ds.file}`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${ds.name} from backend`)
+        }
+        
+        const data = await response.json()
+        
+        appendLog(`[STDOUT] \n${data.raw_output}`)
+        appendLog(`[SUCCESS] ${ds.name} Parsed. CPU: ${data.results.sequential}ms | CUDA: ${data.results.cuda}ms`)
+
+        newChartData.push({
+          name: ds.name,
+          edges: data.edges,
+          Sequential: data.results.sequential,
+          OpenMP: data.results.openmp,
+          CUDA: data.results.cuda
+        })
+        
+        setChartData([...newChartData])
       }
-      const data = await response.json()
-      setResults(data)
+      setStatusText('')
+      appendLog(`[SYSTEM] Sequence Complete.`)
     } catch (err) {
       setError(err.message)
+      appendLog(`[ERROR] ${err.message}`)
     } finally {
       setLoading(false)
+      setStatusText('')
     }
+  }
+
+  // Generate 256 tiny squares for the VRAM map
+  const renderVRAMMap = () => {
+    const blocks = []
+    for (let i = 0; i < 256; i++) {
+      blocks.push(
+        <div key={i} className={`vram-block ${i < activeBlocks ? 'active' : ''}`}></div>
+      )
+    }
+    return blocks
   }
 
   return (
     <div className="dashboard-container">
       <div className="header">
-        <h1>Adaptive Graph Engine</h1>
-        <p>CUDA Unified Memory (UVM) Benchmarking Dashboard</p>
+        <h1>ADAPTIVE_GRAPH_ENGINE // HPC_DASHBOARD</h1>
+        <p>CUDA UVM ALLOCATOR & TELEMETRY MONITOR</p>
       </div>
 
       <div className="controls">
         <button 
           className="run-btn" 
-          onClick={runBenchmark} 
+          onClick={runBenchmarkAll} 
           disabled={loading}
         >
           {loading ? (
             <>
-              <div className="spinner"></div>
-              Running Benchmarks...
+              <span>[██████░░░░]</span>
+              <span>{statusText}</span>
             </>
           ) : (
-            '▶ Execute Hardware Benchmark'
+            '>_ EXECUTE_BENCHMARK_SEQUENCE'
           )}
         </button>
       </div>
 
       {error && (
-        <div style={{ color: '#ef4444', textAlign: 'center', background: 'rgba(239,68,68,0.1)', padding: '10px', borderRadius: '8px' }}>
-          Error: {error}
+        <div style={{ color: '#ff3333', marginTop: '10px' }}>
+          FATAL_ERROR: {error}
         </div>
       )}
 
-      {results && (
-        <>
-          <div className="dataset-info">
-            <div>Dataset: <strong>{results.dataset}</strong></div>
-            <div>Vertices: <strong>{results.vertices.toLocaleString()}</strong></div>
-            <div>Edges: <strong>{results.edges.toLocaleString()}</strong></div>
+      <div className="grid-layout">
+        <div className="panel" style={{ padding: '20px' }}>
+          <div className="panel-title">EXECUTION_TIME_VS_GRAPH_SIZE</div>
+          <div style={{ width: '100%', height: '350px' }}>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                  <XAxis dataKey="name" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip contentStyle={{ backgroundColor: '#0A0A0A', border: '1px solid #76B900', borderRadius: '0' }} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line type="monotone" dataKey="Sequential" stroke="#94a3b8" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
+                  <Line type="monotone" dataKey="OpenMP" stroke="#0071c5" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
+                  <Line type="monotone" dataKey="CUDA" stroke="#76b900" strokeWidth={2} dot={{ r: 4, fill: '#0A0A0A' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
+                AWAITING_DATA...
+              </div>
+            )}
           </div>
+        </div>
 
-          <div className="results-grid">
-            <div className="metric-card cpu-seq">
-              <h3>CPU Sequential</h3>
-              <div className="metric-value">
-                {results.results.sequential.toFixed(2)} <span>ms</span>
-              </div>
-            </div>
-            
-            <div className="metric-card cpu-omp">
-              <h3>CPU OpenMP</h3>
-              <div className="metric-value">
-                {results.results.openmp.toFixed(2)} <span>ms</span>
-              </div>
-            </div>
-            
-            <div className="metric-card gpu-cuda">
-              <h3>GPU CUDA (UVM)</h3>
-              <div className="metric-value" style={{ color: 'var(--cuda-green)' }}>
-                {results.results.cuda.toFixed(2)} <span>ms</span>
-              </div>
-            </div>
+        <div className="panel">
+          <div className="panel-title">UVM_VRAM_ALLOCATION (8GB)</div>
+          <div className="vram-grid">
+            {renderVRAMMap()}
           </div>
-        </>
-      )}
+          <div style={{ marginTop: '15px', fontSize: '0.8rem', color: '#94a3b8' }}>
+            Active Pages: {activeBlocks} / 256<br/>
+            Block Size: 32MB<br/>
+            Zero-Copy Mode: ENABLED
+          </div>
+        </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: '20px' }}>
+        <div className="panel-title">STDOUT_TERMINAL</div>
+        <div className="terminal" ref={terminalRef}>
+          {logs.map((log, idx) => (
+            <div key={idx} className="terminal-line">
+              <span className="terminal-prefix">root@hpc:~$</span>
+              <span style={{ whiteSpace: 'pre-wrap' }}>{log}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

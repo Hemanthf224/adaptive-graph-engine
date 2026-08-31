@@ -1,17 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-
 :root {
-  --bg-color: #0f172a;
-  --panel-bg: rgba(30, 41, 59, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent-blue: #3b82f6;
-  --accent-blue-hover: #60a5fa;
-  --accent-green: #10b981;
-  --accent-green-hover: #34d399;
-  --cuda-green: #76b900;
-  --cpu-blue: #0071c5;
+  --bg-dark: #0A0A0A;
+  --bg-panel: #111111;
+  --border-color: #222222;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --nvidia-green: #76B900;
+  --nvidia-green-glow: rgba(118, 185, 0, 0.2);
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 * {
@@ -21,180 +16,160 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(118, 185, 0, 0.15) 0px, transparent 50%);
-  color: var(--text-main);
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding: 40px 20px;
 }
 
-.dashboard-container {
-  width: 90%;
-  max-width: 1000px;
-  background: var(--panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.header {
-  text-align: center;
-}
-
-.header h1 {
-  font-size: 2.5rem;
+h1, h2, h3 {
   font-weight: 800;
-  background: linear-gradient(to right, #60a5fa, #34d399);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 10px;
-}
-
-.header p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-}
-
-.controls {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-button.run-btn {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-  color: white;
-  border: none;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-button.run-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.4);
-}
-
-button.run-btn:active {
-  transform: translateY(1px);
-}
-
-button.run-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Results Area */
-.results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.metric-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-}
-
-.metric-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255,255,255,0.2);
-}
-
-.metric-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-}
-
-.metric-card.cpu-seq::before { background: var(--text-muted); }
-.metric-card.cpu-omp::before { background: var(--cpu-blue); }
-.metric-card.gpu-cuda::before { background: var(--cuda-green); }
-
-.metric-card h3 {
-  font-size: 1rem;
-  color: var(--text-muted);
-  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.metric-value {
-  font-size: 2.5rem;
-  font-weight: 800;
+/* Dashboard Container */
+.dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  padding: 20px;
   display: flex;
-  align-items: baseline;
-  gap: 5px;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.metric-value span {
-  font-size: 1rem;
-  color: var(--text-muted);
-  font-weight: 400;
+/* Header */
+.header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 20px;
 }
 
-.dataset-info {
-  background: rgba(0,0,0,0.2);
-  border-radius: 12px;
+.header h1 {
+  color: var(--nvidia-green);
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 20px;
+}
+
+.run-btn {
+  background-color: transparent;
+  color: var(--nvidia-green);
+  border: 1px solid var(--nvidia-green);
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.1s;
+}
+
+.run-btn:hover:not(:disabled) {
+  background-color: var(--nvidia-green-glow);
+}
+
+.run-btn:disabled {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+/* Grid Layout */
+.grid-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* Panel */
+.panel {
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark);
   padding: 15px;
-  display: flex;
-  justify-content: space-around;
-  color: var(--text-muted);
-  font-size: 0.95rem;
+  position: relative;
 }
 
-.dataset-info strong {
-  color: var(--text-main);
+.panel-title {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background: var(--bg-dark);
+  padding: 0 5px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* VRAM Memory Map */
+.vram-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 2px;
+  margin-top: 15px;
+}
+
+.vram-block {
+  aspect-ratio: 1;
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+}
+
+.vram-block.active {
+  background-color: var(--nvidia-green);
+  border-color: #98f300;
+  box-shadow: 0 0 5px var(--nvidia-green-glow);
+}
+
+/* Terminal Console */
+.terminal {
+  background: #050505;
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  height: 250px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  line-height: 1.4;
+  margin-top: 20px;
+}
+
+.terminal-line {
+  margin-bottom: 2px;
+}
+
+.terminal-prefix {
+  color: var(--nvidia-green);
+  margin-right: 10px;
+}
+
+/* Custom Scrollbar for Terminal */
+.terminal::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal::-webkit-scrollbar-track {
+  background: #050505;
+}
+.terminal::-webkit-scrollbar-thumb {
+  background: #333;
 }
