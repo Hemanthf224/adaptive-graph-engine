@@ -271,8 +271,17 @@ int main(int argc, char** argv) {
                     std::cout << "[INFO] OpenMP Time : " << time_omp << " ms\n";
 
                 } else {
-                    std::cout << "\n--- Adaptive Engine Execution ---\n";
-                    std::vector<int32_t> dist = graph_engine::core::AdaptiveScheduler::execute_bfs(graph, 0);
+                    std::cout << "\n======================================================\n";
+                    std::cout << "        DIRECTION-OPTIMIZING BFS (GRAPH500)           \n";
+                    std::cout << "======================================================\n";
+                    std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
+
+                    auto start_do = std::chrono::high_resolution_clock::now();
+                    std::vector<int32_t> dist = graph_engine::algorithms::bfs_direction_optimizing(graph, 0);
+                    auto end_do = std::chrono::high_resolution_clock::now();
+                    double time_do = std::chrono::duration<double, std::milli>(end_do - start_do).count();
+
+                    std::cout << "[SUCCESS] Direction-Optimizing BFS completed in " << time_do << " ms.\n";
                 }
 
             } catch (const std::exception& e) {

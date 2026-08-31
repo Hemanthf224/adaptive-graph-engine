@@ -16,5 +16,9 @@ std::vector<int32_t> bfs_sequential(const core::CSRGraph& graph, core::vertex_id
 // Returns a vector of distances from the source vertex.
 std::vector<int32_t> bfs_openmp(const core::CSRGraph& graph, core::vertex_id_t source);
 
+// Direction-Optimizing Breadth-First Search (OpenMP Parallel)
+// Returns a vector of distances from the source vertex.
+std::vector<int32_t> bfs_direction_optimizing(const core::CSRGraph& graph, core::vertex_id_t source);
+
 } // namespace algorithms
 } // namespace graph_engine

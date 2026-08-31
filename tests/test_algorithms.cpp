@@ -57,6 +57,12 @@ TEST_F(AlgorithmTest, BFS_Correctness) {
         EXPECT_EQ(dist_seq[i], dist_omp[i]) << "Mismatch at vertex " << i << " (OpenMP)";
     }
 
+    // Verify Direction-Optimizing BFS
+    auto dist_do = algorithms::bfs_direction_optimizing(graph, 0);
+    for (size_t i = 0; i < graph.num_vertices; ++i) {
+        EXPECT_EQ(dist_seq[i], dist_do[i]) << "Mismatch at vertex " << i << " (Direction-Optimizing)";
+    }
+
     if (has_gpu()) {
         auto dist_cuda = algorithms::bfs_cuda(graph, 0);
         for (size_t i = 0; i < graph.num_vertices; ++i) {
