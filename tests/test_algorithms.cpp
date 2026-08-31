@@ -34,28 +34,50 @@ protected:
         // wait, that's 7 edges. Let's just use the tiny test graph function!
         graph = core::create_tiny_test_graph();
     }
+    bool has_gpu() {
+        int deviceCount = 0;
+        cudaError_t error = cudaGetDeviceCount(&deviceCount);
+        if (error != cudaSuccess) {
+            cudaGetLastError(); // Clear error
+            return false;
+        }
+        return deviceCount > 0;
+    }
 };
 
 TEST_F(AlgorithmTest, BFS_Correctness) {
     auto dist_seq = algorithms::bfs_sequential(graph, 0);
     auto dist_omp = algorithms::bfs_openmp(graph, 0);
-    auto dist_cuda = algorithms::bfs_cuda(graph, 0);
 
-    // Verify all hardware paths yield identical exact distances
+    // Verify OpenMP
     for (size_t i = 0; i < graph.num_vertices; ++i) {
         EXPECT_EQ(dist_seq[i], dist_omp[i]) << "Mismatch at vertex " << i << " (OpenMP)";
-        EXPECT_EQ(dist_seq[i], dist_cuda[i]) << "Mismatch at vertex " << i << " (CUDA)";
+    }
+
+    if (has_gpu()) {
+        auto dist_cuda = algorithms::bfs_cuda(graph, 0);
+        for (size_t i = 0; i < graph.num_vertices; ++i) {
+            EXPECT_EQ(dist_seq[i], dist_cuda[i]) << "Mismatch at vertex " << i << " (CUDA)";
+        }
+    } else {
+        GTEST_SKIP() << "Skipping CUDA BFS test due to missing GPU (CI Runner).";
     }
 }
 
 TEST_F(AlgorithmTest, PageRank_Correctness) {
     auto pr_seq = algorithms::pagerank_sequential(graph, 20, 0.85f);
     auto pr_omp = algorithms::pagerank_openmp(graph, 20, 0.85f);
-    auto pr_cuda = algorithms::pagerank_cuda(graph, 20, 0.85f);
 
-    // Verify all hardware paths yield identical floating point values (within epsilon)
     for (size_t i = 0; i < graph.num_vertices; ++i) {
         EXPECT_NEAR(pr_seq[i], pr_omp[i], 1e-4) << "Mismatch at vertex " << i << " (OpenMP)";
-        EXPECT_NEAR(pr_seq[i], pr_cuda[i], 1e-4) << "Mismatch at vertex " << i << " (CUDA)";
+    }
+
+    if (has_gpu()) {
+        auto pr_cuda = algorithms::pagerank_cuda(graph, 20, 0.85f);
+        for (size_t i = 0; i < graph.num_vertices; ++i) {
+            EXPECT_NEAR(pr_seq[i], pr_cuda[i], 1e-4) << "Mismatch at vertex " << i << " (CUDA)";
+        }
+    } else {
+        GTEST_SKIP() << "Skipping CUDA PageRank test due to missing GPU (CI Runner).";
     }
 }
