@@ -1,0 +1,33 @@
+PROJECT_NAME           = "Adaptive Graph Engine"
+PROJECT_NUMBER         = "v1.0"
+PROJECT_BRIEF          = "HPC framework for massive-scale graph processing"
+
+OUTPUT_DIRECTORY       = docs
+INPUT                  = include src README.md
+USE_MDFILE_AS_MAINPAGE = README.md
+
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+
+# Theme settings
+HTML_COLORSTYLE_HUE    = 200
+HTML_COLORSTYLE_SAT    = 100
+HTML_COLORSTYLE_GAMMA  = 80
+HTML_TIMESTAMP         = NO
+HTML_DYNAMIC_MENUS     = YES
+HTML_DYNAMIC_SECTIONS  = YES
+
+# Graph generation (requires graphviz/dot installed, usually CI has it)
+HAVE_DOT               = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES

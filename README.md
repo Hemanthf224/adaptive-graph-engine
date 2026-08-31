@@ -1,6 +1,7 @@
 # Adaptive Graph Engine
 
 [![C++ Graph Engine CI](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Hemanthf224/adaptive-graph-engine/actions/workflows/ci.yml)
+[![Doxygen Docs](https://img.shields.io/badge/Docs-Doxygen-blue)](https://hemanthf224.github.io/adaptive-graph-engine)
 ![C++](https://img.shields.io/badge/C++-17-blue.svg)
 ![CUDA](https://img.shields.io/badge/CUDA-12.0-76B900.svg)
 ![OpenMP](https://img.shields.io/badge/OpenMP-Supported-orange.svg)
@@ -14,6 +15,7 @@ This system is engineered for the execution of massive-scale graph algorithms (e
 ---
 
 ## Table of Contents
+- [Documentation](#documentation)
 - [Architecture and Core Capabilities](#architecture-and-core-capabilities)
 - [Technical Architecture Flow](#technical-architecture-flow)
 - [Quickstart (Docker)](#quickstart-docker)
@@ -21,6 +23,13 @@ This system is engineered for the execution of massive-scale graph algorithms (e
 - [Telemetry Dashboard UI](#telemetry-dashboard-ui)
 - [Contributors](#contributors)
 - [License](#license)
+
+## Documentation
+
+Comprehensive C++ API documentation is automatically generated via Doxygen and hosted on GitHub Pages:
+👉 **[Adaptive Graph Engine Documentation](https://hemanthf224.github.io/adaptive-graph-engine)**
+
+---
 
 ## Architecture and Core Capabilities
 

@@ -8,30 +8,57 @@
 namespace graph_engine {
 namespace core {
 
-// Compressed Sparse Row (CSR) representation of a graph.
-// Optimized for contiguous memory access on CPUs and GPUs.
+/**
+ * @struct CSRGraph
+ * @brief Compressed Sparse Row (CSR) representation of a graph.
+ * 
+ * The CSRGraph is optimized for contiguous memory access on CPUs and GPUs.
+ * It utilizes NVIDIA Unified Virtual Memory (UVM) via the `uvm_allocator`
+ * to allow identical C++ STL containers to be accessed on the Host (CPU) 
+ * and the Device (GPU) with zero-copy page faulting.
+ */
 struct CSRGraph {
 public:
-    // Number of vertices and edges
+    /** @brief Total number of vertices in the graph. */
     size_t num_vertices = 0;
+    
+    /** @brief Total number of directed edges in the graph. */
     size_t num_edges = 0;
 
-    // CSR Arrays backed by Unified Memory (Accessible by both CPU and GPU!)
+    /** 
+     * @brief Row offsets array (Size: V + 1).
+     * Backed by Unified Memory. Points to the starting index in `column_indices` for a vertex's neighbors.
+     */
     uvm_vector<edge_id_t> row_offsets;
+    
+    /** 
+     * @brief Column indices array (Size: E).
+     * Backed by Unified Memory. Stores the destination vertex ID for each edge.
+     */
     uvm_vector<vertex_id_t> column_indices;
 
-    // Optional: edge weights (if weighted graph)
+    /** 
+     * @brief Edge weights array (Size: E).
+     * Backed by Unified Memory. Stores the floating point weight for each edge.
+     */
     uvm_vector<weight_t> edge_weights;
+    
+    /** @brief Flag indicating if the graph contains valid edge weights. */
     bool is_weighted = false;
 
-    // Constructor
+    /** @brief Default constructor. */
     CSRGraph() = default;
 
-    // Helper to print graph stats
+    /** 
+     * @brief Helper utility to print graph statistics to stdout.
+     */
     void print() const;
 };
 
-// Creates a tiny hardcoded graph for testing and debugging
+/**
+ * @brief Creates a tiny hardcoded graph for testing and debugging.
+ * @return A CSRGraph containing a 5-vertex toy topology.
+ */
 CSRGraph create_tiny_test_graph();
 
 } // namespace core
