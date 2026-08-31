@@ -99,7 +99,15 @@ def main():
     print(f"     DP Noisy Scores (Top 5): {dp_result.noisy_scores[:5]}")
     print(f"     Privacy Budget Consumed: epsilon={dp_result.epsilon_used}")
 
-    print("\n[SUCCESS] The complete Privacy Stack (FHE + ZKP + DP) is operational!")
+    # 11. Federated Learning (FedAvg across 4 distributed graph shards)
+    print("\n[11] Running Federated GCN Training (FedAvg, 4 nodes, 10 rounds)...")
+    fed_model = age.federated_train(graph, num_nodes=4, num_rounds=10)
+    print(f"     Completed {fed_model.num_rounds} federated rounds")
+    print(f"     Global Model Weights: {fed_model.global_weights}")
+    print(f"     Global Loss after FL: {fed_model.global_loss:.6f}")
+    print(f"     (Raw data never left any node - only gradients were shared!)")
+
+    print("\n[SUCCESS] Complete AI, Privacy, and Federated Stack is fully operational!")
 
 if __name__ == "__main__":
     main()

@@ -13,6 +13,7 @@
 #include "algorithms/fhe_simulator.hpp"
 #include "algorithms/zkp_verifier.hpp"
 #include "algorithms/differential_privacy.hpp"
+#include "algorithms/federated_learning.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -121,4 +122,14 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("pagerank_sensitivity", &algorithms::DifferentialPrivacy::pagerank_sensitivity,
           "Compute the L1 global sensitivity of PageRank (Blocki-Blum-Datta-Sheffet bound)",
           py::arg("graph"), py::arg("damping") = 0.85);
+
+    // Federated Learning Bindings
+    py::class_<algorithms::FederatedModel>(m, "FederatedModel")
+        .def_readwrite("global_weights", &algorithms::FederatedModel::global_weights)
+        .def_readwrite("num_rounds", &algorithms::FederatedModel::num_rounds)
+        .def_readwrite("global_loss", &algorithms::FederatedModel::global_loss);
+
+    m.def("federated_train", &algorithms::FederatedLearning::train,
+          "Train a GCN using Federated Learning (FedAvg) across distributed graph shards",
+          py::arg("graph"), py::arg("num_nodes") = 4, py::arg("num_rounds") = 10);
 }

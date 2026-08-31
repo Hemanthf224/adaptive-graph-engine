@@ -85,6 +85,7 @@ pybind11_add_module(adaptive_graph
     src/fhe_simulator.cpp
     src/zkp_verifier.cpp
     src/differential_privacy.cpp
+    src/federated_learning.cpp
 )
 
 # Link requirements for Python Module
