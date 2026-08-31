@@ -12,6 +12,8 @@
 #include "algorithms/bfs_cuda.cuh"
 #include "algorithms/page_rank.hpp"
 #include "algorithms/page_rank_cuda.cuh"
+#include "algorithms/connected_components.hpp"
+#include "algorithms/connected_components_cuda.cuh"
 #include <iomanip>
 
 int main(int argc, char** argv) {
@@ -69,6 +71,7 @@ int main(int argc, char** argv) {
         
         bool run_benchmark = false;
         bool run_scaling = false;
+        bool run_cc = false;
         int num_runs = 4; // 1 cold start + 3 hot runs
         std::string filepath = "";
 
@@ -78,6 +81,7 @@ int main(int argc, char** argv) {
                 std::string arg = argv[i];
                 if (arg == "--benchmark") run_benchmark = true;
                 if (arg == "--scaling") run_scaling = true;
+                if (arg == "--cc") run_cc = true;
                 if (arg == "--runs" && i + 1 < argc) {
                     num_runs = std::stoi(argv[++i]);
                 }
@@ -179,6 +183,42 @@ int main(int argc, char** argv) {
                         double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
                         std::cout << "[SCALING_RESULT] Threads: " << threads << " | Time: " << time_omp << " ms\n";
                     }
+
+                } else if (run_cc) {
+                    std::cout << "\n======================================================\n";
+                    std::cout << "        CONNECTED COMPONENTS BENCHMARK SUITE          \n";
+                    std::cout << "======================================================\n";
+                    std::cout << "Graph: " << graph.num_vertices << " Vertices, " << graph.num_edges << " Edges\n";
+                    std::cout << "Algorithm: Push-Based Label Propagation\n\n";
+
+                    // 1. Sequential
+                    std::cout << "[Running] Sequential Connected Components...\n";
+                    auto start_seq = std::chrono::high_resolution_clock::now();
+                    std::vector<int> cc_seq = graph_engine::algorithms::connected_components_sequential(graph);
+                    auto end_seq = std::chrono::high_resolution_clock::now();
+                    double time_seq = std::chrono::duration<double, std::milli>(end_seq - start_seq).count();
+
+                    // 2. OpenMP
+                    std::cout << "[Running] OpenMP Connected Components...\n";
+                    auto start_omp = std::chrono::high_resolution_clock::now();
+                    std::vector<int> cc_omp = graph_engine::algorithms::connected_components_openmp(graph);
+                    auto end_omp = std::chrono::high_resolution_clock::now();
+                    double time_omp = std::chrono::duration<double, std::milli>(end_omp - start_omp).count();
+
+                    // 3. CUDA
+                    std::cout << "[Running] CUDA Connected Components (UVM)...\n";
+                    auto start_cuda = std::chrono::high_resolution_clock::now();
+                    std::vector<int> cc_cuda = graph_engine::algorithms::connected_components_cuda(graph);
+                    auto end_cuda = std::chrono::high_resolution_clock::now();
+                    double time_cuda = std::chrono::duration<double, std::milli>(end_cuda - start_cuda).count();
+
+                    std::cout << "\n================ PERFORMANCE REPORT ================\n";
+                    std::cout << std::left << std::setw(20) << "Hardware" << std::setw(20) << "Avg Time (ms)" << "Speedup vs Seq\n";
+                    std::cout << "----------------------------------------------------\n";
+                    std::cout << std::left << std::setw(20) << "CPU Sequential" << std::setw(20) << time_seq << "1.0x\n";
+                    std::cout << std::left << std::setw(20) << "CPU OpenMP"     << std::setw(20) << time_omp << (time_seq/time_omp) << "x\n";
+                    std::cout << std::left << std::setw(20) << "GPU CUDA (UVM)" << std::setw(20) << time_cuda << (time_seq/time_cuda) << "x\n";
+                    std::cout << "====================================================\n";
 
                 } else {
                     std::cout << "\n--- Adaptive Engine Execution ---\n";
