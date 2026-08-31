@@ -10,5 +10,8 @@ namespace algorithms {
 // Runs the algorithm entirely in VRAM for the specified number of iterations
 std::vector<float> pagerank_cuda(const core::CSRGraph& host_graph, int iterations = 20, float damping = 0.85f);
 
+// Warm-up function to explicitly migrate UVM memory pages to VRAM
+void prefetch_graph_to_gpu(const core::CSRGraph& graph, int device_id);
+
 } // namespace algorithms
 } // namespace graph_engine

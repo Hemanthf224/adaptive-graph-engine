@@ -1,6 +1,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <chrono>
+#include <cuda_runtime.h>
 #include "core/types.hpp"
 #include "core/utils.hpp"
 #include "core/graph.hpp"
@@ -62,6 +63,11 @@ int main(int argc, char** argv) {
 
                     // 3. CUDA
                     std::cout << "[Running] CUDA PageRank (20 Iterations entirely in VRAM)...\n";
+                    
+                    // WARM START: Prefetch UVM Memory to the GPU before measuring performance
+                    int deviceId = 0;
+                    graph_engine::algorithms::prefetch_graph_to_gpu(graph, deviceId);
+
                     auto start_cuda = std::chrono::high_resolution_clock::now();
                     std::vector<float> pr_cuda = graph_engine::algorithms::pagerank_cuda(graph, 20);
                     auto end_cuda = std::chrono::high_resolution_clock::now();
