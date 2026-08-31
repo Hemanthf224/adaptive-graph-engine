@@ -83,6 +83,7 @@ pybind11_add_module(adaptive_graph
     src/gnn_layer.cpp
     src/quantum_simulator.cpp
     src/fhe_simulator.cpp
+    src/zkp_verifier.cpp
 )
 
 # Link requirements for Python Module

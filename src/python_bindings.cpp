@@ -11,6 +11,7 @@
 #include "algorithms/gnn_layer.hpp"
 #include "algorithms/quantum_simulator.hpp"
 #include "algorithms/fhe_simulator.hpp"
+#include "algorithms/zkp_verifier.hpp"
 
 namespace py = pybind11;
 using namespace graph_engine;
@@ -77,4 +78,26 @@ PYBIND11_MODULE(adaptive_graph, m) {
     m.def("encrypted_pagerank", &algorithms::FHESimulator::encrypted_pagerank,
           "Run PageRank on fully homomorphically encrypted graph data (Privacy-Preserving Analytics)",
           py::arg("graph"), py::arg("iterations") = 10, py::arg("damping") = 0.85f);
+
+    // ZKP Verifier Bindings
+    py::class_<algorithms::ZKPCommitment>(m, "ZKPCommitment")
+        .def_readwrite("commitment_hash", &algorithms::ZKPCommitment::commitment_hash)
+        .def_readwrite("randomness", &algorithms::ZKPCommitment::randomness)
+        .def_readwrite("num_vertices", &algorithms::ZKPCommitment::num_vertices);
+
+    py::class_<algorithms::ZKPProof>(m, "ZKPProof")
+        .def_readwrite("proof_hash", &algorithms::ZKPProof::proof_hash)
+        .def_readwrite("is_valid", &algorithms::ZKPProof::is_valid);
+
+    m.def("zkp_commit", &algorithms::ZKPVerifier::commit,
+          "Commit to PageRank scores without revealing them (Pedersen commitment)",
+          py::arg("scores"), py::arg("randomness") = 0xDEADBEEFCAFEBABEULL);
+
+    m.def("zkp_prove", &algorithms::ZKPVerifier::prove,
+          "Generate a Zero-Knowledge Proof of correct PageRank execution",
+          py::arg("graph"), py::arg("commitment"), py::arg("scores"));
+
+    m.def("zkp_verify", &algorithms::ZKPVerifier::verify,
+          "Verify a ZKP without seeing the underlying scores",
+          py::arg("graph"), py::arg("commitment"), py::arg("proof"));
 }

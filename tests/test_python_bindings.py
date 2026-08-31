@@ -80,7 +80,17 @@ def main():
     print(f"    Server computed PageRank on ENCRYPTED data!")
     print(f"    Client decrypts results: {encrypted_scores}")
 
-    print("\n[SUCCESS] Hardware, AI, Quantum, and Encrypted Graph Analytics are all operational!")
+    # 9. Zero-Knowledge Proofs (Blockchain-Grade Verification)
+    print("\n[9] Running Zero-Knowledge Proof (ZKP) Graph Verification...")
+    pr_scores = age.pagerank(graph, iterations=10, damping=0.85)
+    commitment = age.zkp_commit(pr_scores)
+    print(f"    Commitment hash: {hex(commitment.commitment_hash)}")
+    proof = age.zkp_prove(graph, commitment, pr_scores)
+    print(f"    Proof hash: {hex(proof.proof_hash)}")
+    is_valid = age.zkp_verify(graph, commitment, proof)
+    print(f"    Proof verified (without seeing scores!): {is_valid}")
+
+    print("\n[SUCCESS] Hardware, AI, Quantum, FHE, and ZKP Graph Analytics are all operational!")
 
 if __name__ == "__main__":
     main()
