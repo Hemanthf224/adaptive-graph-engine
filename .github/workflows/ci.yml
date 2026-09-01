@@ -20,7 +20,7 @@ jobs:
         sudo apt-get install -y build-essential cmake libomp-dev openmpi-bin libopenmpi-dev
 
     - name: Install CUDA Toolkit
-      uses: Jimver/cuda-toolkit@v11.7.0
+      uses: Jimver/cuda-toolkit@master
       id: cuda-toolkit
       with:
         cuda: '12.0.0'
