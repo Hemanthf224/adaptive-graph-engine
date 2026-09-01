@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import ForceGraph3D from 'react-force-graph-3d'
+import ForceGraph2D from 'react-force-graph-2d'
 
 const datasets = [
   { file: 'amazon0302.txt', name: 'Amazon', edges: 1234877 },
@@ -32,18 +32,24 @@ function App() {
   const appendLog = (msg) => {
     setLogs(prev => [...prev, msg])
     
-    // Simulate real-time data parsing for the chart
-    // For demo purposes, we randomly generate performance metrics as logs come in
-    if (msg.includes("Processing") || msg.includes("Cycle") || msg.includes("Cycle complete")) {
+    // Parse engine logs to create dynamic visual effects
+    if (msg.includes("Adaptive Engine") || msg.includes("BFS") || msg.includes("Score")) {
       const timeStep = new Date().toLocaleTimeString().split(' ')[0]
-      const throughput = Math.floor(Math.random() * 500) + 100
+      const throughput = Math.floor(Math.random() * 800) + 200 // Simulated MB/s spike
       setChartData(prev => {
         const newData = [...prev, { time: timeStep, speed: throughput }]
         return newData.length > 20 ? newData.slice(newData.length - 20) : newData
       })
       
-      // Randomly allocate VRAM blocks
-      setActiveBlocks(Math.floor(Math.random() * 150) + 20)
+      setActiveBlocks(Math.floor(Math.random() * 200) + 50)
+    } else if (msg.includes("Completed")) {
+      // Cooldown phase
+      setActiveBlocks(0)
+      const timeStep = new Date().toLocaleTimeString().split(' ')[0]
+      setChartData(prev => {
+        const newData = [...prev, { time: timeStep, speed: 0 }]
+        return newData.length > 20 ? newData.slice(newData.length - 20) : newData
+      })
     }
   }
 
@@ -55,7 +61,7 @@ function App() {
       
       ws.onmessage = (event) => {
         appendLog(event.data)
-        if (event.data === "[SYSTEM] Execution Completed.") {
+        if (event.data.includes("Execution Completed")) {
           ws.close()
           resolve()
         }
@@ -186,22 +192,22 @@ function App() {
       )}
 
       <div className="grid-layout">
-        <div className="panel" style={{ padding: '0', height: '400px' }}>
+        <div className="panel" style={{ padding: '0', height: '400px', overflow: 'hidden' }}>
           <div className="panel-title" style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
-            LIVE_3D_TOPOLOGY
+            LIVE_TOPOLOGY_MAP
           </div>
           {graphData.nodes.length > 0 ? (
-            <ForceGraph3D
+            <ForceGraph2D
               graphData={graphData}
               width={750}
               height={400}
               nodeColor={() => '#00f0ff'}
-              linkColor={() => 'rgba(255,255,255,0.2)'}
+              linkColor={() => 'rgba(0, 240, 255, 0.2)'}
               nodeRelSize={4}
               backgroundColor="transparent"
               enableNodeDrag={true}
-              enableNavigationControls={true}
-              showNavInfo={false}
+              enableZoomInteraction={true}
+              enablePanInteraction={true}
             />
           ) : (
             <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
