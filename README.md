@@ -2,10 +2,6 @@
 
 **A multi-paradigm graph analytics engine implementing high-performance computing, distributed systems, applied cryptography, and advanced neural architectures.**
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![C++20](https://img.shields.io/badge/C++-20-blue.svg)
-![Python 3](https://img.shields.io/badge/Python-3-blue.svg)
-![Status](https://img.shields.io/badge/Status-Phase%2050%20Complete-success)
 
 ## System Architecture
 
