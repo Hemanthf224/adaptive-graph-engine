@@ -63,13 +63,16 @@ function App() {
         appendLog(event.data)
         if (event.data.includes("Execution Completed")) {
           ws.close()
-          resolve()
         }
+      }
+      
+      ws.onclose = () => {
+        resolve()
       }
       
       ws.onerror = (err) => {
         appendLog(`[WS_ERROR] Connection Failed`)
-        reject(err)
+        reject(new Error("WebSocket Connection Failed"))
       }
     })
   }
