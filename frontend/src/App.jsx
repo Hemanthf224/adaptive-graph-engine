@@ -161,7 +161,7 @@ function App() {
         </button>
 
         <button className="run-btn" style={{ backgroundColor: '#ff3333' }} onClick={runContinuousStressTest} disabled={loading}>
-          >_ CONTINUOUS_STRESS_TEST
+          {'>_ CONTINUOUS_STRESS_TEST'}
         </button>
       </div>
 
